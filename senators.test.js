@@ -60,15 +60,18 @@ test("uses only official Senate URLs and handles missing form URLs", () => {
 
 test("draft includes user input and a placeholder when name is missing", () => {
   const defaultDraft = draftMessage("", "");
-  assert.match(defaultDraft, /Chris Van Hollen, not Senator Chuck Schumer/);
-  assert.match(defaultDraft, /recent midterm election.*mandate/);
-  assert.match(
+  assert.equal(
     defaultDraft,
-    /people ahead of big-money donors and special interest groups/,
+    [
+      "Dear Senator,",
+      "Though I am not one of your constituents, I urge you to support Senator Chris Van Hollen, not Senator Chuck Schumer, for Senate Majority leader. The party is in desperate need of a change in leadership, and I believe the recent midterm election gave Democrats a mandate to make that change.",
+      "Senator Van Hollen would be a far better choice to lead the caucus and serve as Senate Majority Leader. I believe he will put the interests of the people ahead of big-money donors and special interest groups.",
+      "Please stand with voters demanding new leadership and support Senator Van Hollen.",
+      "Sincerely,\n[Your Name]",
+    ].join("\n\n"),
   );
   assert.match(draftMessage(" Ada ", " My reason. "), /My reason\./);
   assert.match(draftMessage(" Ada ", ""), /Sincerely,\nAda$/);
-  assert.match(defaultDraft, /\[Your name\]$/);
 });
 
 test("rejects malformed or empty data", () => {
