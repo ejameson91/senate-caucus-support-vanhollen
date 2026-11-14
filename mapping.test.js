@@ -58,25 +58,29 @@ test("does not fill anything if a field changes or the page is wrong", () => {
 function mappedFixture(id) {
   const { mapping } = FORMS[id];
   const controls = Object.fromEntries(mapping.fields.map(([field, label, , tag = "INPUT"]) => [
-    field, { tagName: tag, labels: [{ textContent: label }], value: "", dispatchEvent() {} },
+    field, { tagName: tag, labels: [{ textContent: label }], value: "", getClientRects: () => [1], dispatchEvent() {} },
   ]));
   controls[mapping.state[0]] = {
     tagName: "SELECT", labels: [{ textContent: mapping.state[1] }], value: "",
-    options: [{ value: mapping.fullStateName ? "New York" : "NY" }], dispatchEvent() {},
+    options: [{ value: mapping.fullStateName ? "New York" : "NY" }], getClientRects: () => [1], dispatchEvent() {},
   };
+  if (mapping.prerequisite) {
+    const [field, label, value = "Housing"] = mapping.prerequisite;
+    controls[field] = { tagName: "SELECT", labels: [{ textContent: label }], value, getClientRects: () => [1] };
+  }
   const form = { getClientRects: () => [1], querySelector: (selector) => controls[selector.match(/^\[id="(.+)"\]$/)?.[1]] };
   globalThis.document = { querySelector: (selector) => selector === mapping.form ? form : null };
   return { controls, mapping: { ...mapping, stateNames: CONTACT_STATES } };
 }
 
-for (const id of ["king", "cortezmasto"]) {
+for (const id of ["king", "cortezmasto", "padilla", "murphy"]) {
   test(`${id} fills expected fields including email confirmation`, () => {
     const { controls, mapping } = mappedFixture(id);
     assert.match(fillMappedForm(data, mapping), /does not submit/);
     for (const [field, , key] of mapping.fields) {
       assert.equal(controls[field].value, key === "subject" || key === "message" ? data[key] : data.contact[key]);
     }
-    assert.equal(controls[mapping.state[0]].value, id === "king" ? "NY" : "New York");
+    assert.equal(controls[mapping.state[0]].value, mapping.fullStateName ? "New York" : "NY");
   });
 
   test(`${id} rejects changed fields and unsupported states before filling`, () => {
@@ -86,6 +90,24 @@ for (const id of ["king", "cortezmasto"]) {
     assert.equal(controls[mapping.fields[0][0]].value, "");
     controls[mapping.fields.at(-1)[0]].labels[0].textContent = mapping.fields.at(-1)[1];
     controls[mapping.state[0]].options = [];
+    assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
+    assert.equal(controls[mapping.fields[0][0]].value, "");
+  });
+}
+
+for (const id of ["padilla", "murphy"]) {
+  test(`${id} requires its initial selection and visible fields`, () => {
+    const { controls, mapping } = mappedFixture(id);
+    controls[mapping.prerequisite[0]].value = "";
+    assert.throws(() => fillMappedForm(data, mapping), /initial selection/);
+    assert.equal(controls[mapping.fields[0][0]].value, "");
+    if (mapping.prerequisite[2]) {
+      controls[mapping.prerequisite[0]].value = "help";
+      assert.throws(() => fillMappedForm(data, mapping), /initial selection/);
+      assert.equal(controls[mapping.fields[0][0]].value, "");
+    }
+    controls[mapping.prerequisite[0]].value = mapping.prerequisite[2] || "Housing";
+    controls[mapping.fields[1][0]].getClientRects = () => [];
     assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
     assert.equal(controls[mapping.fields[0][0]].value, "");
   });
