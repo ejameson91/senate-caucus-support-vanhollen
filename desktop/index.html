@@ -12,7 +12,7 @@
     <main>
       <h1>Senate Form Helper</h1>
       <p>Imports the contact export from the website. Your details stay in memory while this app is open. The export file remains on disk until you delete it.</p>
-      <p>The helper supports Senators Gillibrand, King, and Cortez Masto. Other offices are not yet supported. Offices may limit responses to constituents.</p>
+      <p>The helper supports Senators Gillibrand, King, Cortez Masto, Padilla, and Murphy. Other offices are not yet supported. Offices may limit responses to constituents.</p>
       <ol>
         <li><button id="import">Import contact export</button></li>
         <li>
@@ -21,6 +21,8 @@
             <option value="gillibrand">Kirsten Gillibrand</option>
             <option value="king">Angus King</option>
             <option value="cortezmasto">Catherine Cortez Masto</option>
+            <option value="padilla">Alex Padilla</option>
+            <option value="murphy">Chris Murphy</option>
           </select>
           <button id="open" disabled>Open form</button>
         </li>
@@ -33,7 +35,7 @@
         </li>
         <li><button id="fill" disabled>Fill form</button></li>
       </ol>
-      <p>For Cortez Masto, first open “share your opinion on legislation” on her page. If a prefix is unavailable, choose it manually. Filling sends your details to the form page. Review all fields, complete any CAPTCHA, and submit yourself. The helper never submits forms.</p>
+      <p>First open “share your opinion on legislation” for Cortez Masto, choose “Share your opinion or comments on bills or other issues” for Padilla, or choose a topic on Murphy's page. For Murphy, use that same topic in the helper or leave it to be chosen on the form. If a prefix is unavailable, choose it manually. Filling sends your details to the form page. Review all fields, complete any CAPTCHA, and submit yourself. The helper never submits forms.</p>
       <p id="status" role="status" aria-live="polite">Import an export to begin.</p>
     </main>
   </body>

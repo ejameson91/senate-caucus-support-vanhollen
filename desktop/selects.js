@@ -45,6 +45,8 @@ export function prepareSelections(config, prefix, topic) {
   }
   if (topic) {
     const select = find(config.topic);
+    if (config.requireCurrentTopic && select.value !== topic.value)
+      throw new Error("Choose the same topic on the senator's form first; no fields were filled.");
     const matches = [...select.options].filter((option) =>
       option.value === topic.value && option.textContent.trim() === topic.label &&
       option.value && !option.disabled && !option.closest("optgroup:disabled"));

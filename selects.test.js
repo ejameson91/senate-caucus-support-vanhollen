@@ -26,21 +26,29 @@ function fixture(id) {
   return { config, form, topic, prefix };
 }
 
-for (const id of ["gillibrand", "king", "cortezmasto"]) {
+for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy"]) {
   test(`${id} loads selectable topics and prepares the chosen topic`, () => {
     const { config, topic } = fixture(id);
+    if (config.requireCurrentTopic) topic.value = "GOV";
     const options = readTopics(config);
     assert.deepEqual(options, [{ value: "GOV", label: "Government Reform" }]);
     const result = prepareSelections(config, "", options[0]);
     assert.deepEqual(result.selected, [[topic, "GOV"]]);
-    assert.deepEqual(result.warnings, id === "cortezmasto" ? ["Choose the required prefix on the form."] : []);
+    assert.deepEqual(result.warnings, config.prefixRequired ? ["Choose the required prefix on the form."] : []);
   });
 
   test(`${id} rejects stale topics before filling`, () => {
     const { config } = fixture(id);
+    if (config.requireCurrentTopic) globalThis.document.querySelector(config.form).querySelector(`[id="${config.topic[0]}"]`).value = "GOV";
     assert.throws(() => prepareSelections(config, "", { value: "GOV", label: "Old label" }), /no longer available/);
   });
 }
+
+test("Murphy's helper topic must match the topic already selected on the form", () => {
+  const { config, topic } = fixture("murphy");
+  topic.value = "Housing";
+  assert.throws(() => prepareSelections(config, "", { value: "GOV", label: "Government Reform" }), /same topic/);
+});
 
 test("handles available, unavailable, and absent prefixes without guessing", () => {
   const { config, prefix } = fixture("cortezmasto");

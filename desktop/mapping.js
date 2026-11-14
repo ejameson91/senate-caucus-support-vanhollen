@@ -43,10 +43,17 @@ export function fillMappedForm(data, mapping) {
   const find = (id, tag, label) => {
     const control = form.querySelector(`[id="${id}"]`);
     if (!control || control.tagName !== tag || control.disabled || control.readOnly ||
+        (mapping.requireVisible && !control.getClientRects().length) ||
         control.labels?.[0]?.textContent.trim() !== label)
       throw new Error("The contact form has changed; no fields were filled. Complete it manually.");
     return control;
   };
+  if (mapping.prerequisite) {
+    const [id, label, expected] = mapping.prerequisite;
+    const control = find(id, "SELECT", label);
+    if (!control.value || (expected && control.value !== expected))
+      throw new Error("Complete the initial selection on the senator's form before filling.");
+  }
   const controls = mapping.fields.map(([id, label, key, tag = "INPUT"]) => [
     find(id, tag, label),
     key === "subject" || key === "message" ? data[key] : data.contact[key],
