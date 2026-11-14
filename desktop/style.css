@@ -1,0 +1,5 @@
+body { font: 16px/1.5 system-ui, sans-serif; color: #172436; background: #f4f3ef; }
+main { max-width: 650px; margin: auto; padding: 1.5rem; }
+button { font: inherit; margin: 0.4rem; padding: 0.6rem; cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid #ad5800; outline-offset: 3px; }

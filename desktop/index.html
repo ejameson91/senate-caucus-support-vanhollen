@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'" />
+    <title>Senate Form Helper</title>
+    <link rel="stylesheet" href="style.css" />
+    <script defer src="renderer.js"></script>
+  </head>
+  <body>
+    <main>
+      <h1>Senate Form Helper</h1>
+      <p>Imports the contact export from the website. Your details stay in memory while this app is open. The export file remains on disk until you delete it.</p>
+      <p>The helper supports Senators Gillibrand, King, and Cortez Masto. Other offices are not yet supported. Offices may limit responses to constituents.</p>
+      <ol>
+        <li><button id="import">Import contact export</button></li>
+        <li>
+          <label for="senator">Choose a senator</label>
+          <select id="senator">
+            <option value="gillibrand">Kirsten Gillibrand</option>
+            <option value="king">Angus King</option>
+            <option value="cortezmasto">Catherine Cortez Masto</option>
+          </select>
+          <button id="open" disabled>Open form</button>
+        </li>
+        <li>
+          <button id="load-topics" disabled>Load topics from form</button>
+          <label for="topic">Topic <span>(optional; otherwise choose on the form)</span></label>
+          <select id="topic" disabled>
+            <option value="">Choose on form</option>
+          </select>
+        </li>
+        <li><button id="fill" disabled>Fill form</button></li>
+      </ol>
+      <p>For Cortez Masto, first open “share your opinion on legislation” on her page. If a prefix is unavailable, choose it manually. Filling sends your details to the form page. Review all fields, complete any CAPTCHA, and submit yourself. The helper never submits forms.</p>
+      <p id="status" role="status" aria-live="polite">Import an export to begin.</p>
+    </main>
+  </body>
+</html>

@@ -5,6 +5,7 @@ import {
   draftMessage,
   getSenators,
 } from "./senators.js";
+import { CONTACT_STATES, PREFIXES, validateExport } from "./export-data.js";
 
 const $ = (selector) => document.querySelector(selector);
 const stateSelect = $("#state");
@@ -20,6 +21,50 @@ for (const [state, name] of Object.entries(STATES)) {
   option.textContent = name;
   stateSelect.append(option);
 }
+for (const [state, name] of Object.entries(CONTACT_STATES)) {
+  const option = document.createElement("option");
+  option.value = state;
+  option.textContent = name;
+  $("#export-state").append(option);
+}
+for (const prefix of PREFIXES) {
+  const option = document.createElement("option");
+  option.value = prefix;
+  option.textContent = prefix;
+  $("#export-prefix").append(option);
+}
+
+$("#export-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  try {
+    const data = validateExport({
+      version: 1,
+      contact: {
+        prefix: $("#export-prefix").value,
+        firstName: $("#export-first-name").value,
+        lastName: $("#export-last-name").value,
+        address: $("#export-address").value,
+        address2: $("#export-address2").value,
+        city: $("#export-city").value,
+        state: $("#export-state").value,
+        zip: $("#export-zip").value,
+        email: $("#export-email").value,
+        phone: $("#export-phone").value,
+      },
+      subject: $("#subject").value,
+      message: $("#body").value,
+    });
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "senate-contact-export.json";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    $("#export-status").textContent = "Export downloaded. Keep it private and delete it when finished.";
+  } catch (error) {
+    $("#export-status").textContent = error.message;
+  }
+});
 
 function card(senator) {
   const item = document.createElement("li");

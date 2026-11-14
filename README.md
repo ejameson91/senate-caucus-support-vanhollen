@@ -20,7 +20,20 @@ Open <http://localhost:8000/>. A local web server is required for JavaScript mod
 npm test
 ```
 
-No package installation is required. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development and review process.
+No package installation is required for these tests. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development and review process.
+
+## Optional desktop form helper
+
+The website can export contact details and the current subject and message as a JSON file for the optional desktop helper. The export is unencrypted and contains personal information: keep it private, and delete it from your downloads and trash when finished. Do not share it in issues or logs. Exporting is optional and happens locally in the browser.
+
+The helper supports the contact forms for **Senators Gillibrand, King, and Cortez Masto**. All other offices are unsupported; use the website's regular contact links for them. Forms may change, and the helper reports when its expected fields are missing rather than attempting to guess. Some offices restrict submissions to constituents.
+
+1. Download an export from the website and obtain a desktop helper build from the project's [GitHub releases](https://github.com/ejameson91/senate-caucus-support-vanhollen/releases), once a release is available. Builds are unsigned and may trigger operating-system warnings. Inspect the source and verify the source of any download before running it.
+2. Open the helper and import the JSON file. The helper holds the imported details in memory until closed; the export file remains on disk.
+3. Select a supported senator and open the form. For Cortez Masto, open **share your opinion on legislation** on her page first. Return to the helper and select **Load topics from form** to choose from that office's current topics, then select **Fill form**. You can instead choose the topic manually on the form. If your optional exported prefix is unavailable, select one manually where required; King has no prefix field. Review all values. The form page and any services it uses can access the information entered there. Repeat for another supported senator if desired.
+4. Complete any CAPTCHA and submit the form yourself. The helper does not submit or report delivery. Close the helper and delete the export when done.
+
+To develop the helper, run `npm ci` and then `npm run desktop`. `npm run dist -- --mac --x64 --arm64 --publish never` builds unsigned macOS ZIPs on macOS; `npm run dist -- --win --x64 --publish never` builds an unsigned Windows executable on Windows. The desktop-build workflow can be run manually to produce artifacts or by pushing a `v*` tag to publish a GitHub release. No release download is available until a tagged build has succeeded.
 
 ## Data and privacy
 
@@ -28,7 +41,7 @@ The app fetches the current JSON from [congress-legislators](https://github.com/
 
 Contact-form links and membership depend on the upstream data and may be stale or missing. Where no form URL is present, the app links to the senator's official website. It accepts only Senate.gov links, upgrades HTTP links to HTTPS, and explicitly reports when data or an official link is unavailable. Check current membership and contact information against official sources before a campaign.
 
-No message, name, or state is sent to this app's server or stored by the app. Loading senator data contacts the external data host, and following a link or submitting a form shares information according to the receiving site's policies. Browser clipboard access requires a secure context such as HTTPS or localhost; if copying fails, the text is selected for manual copying.
+No message, contact details, or state is sent to this app's server. The optional export stores contact details and message in a local plaintext file; the desktop helper imports them into memory. Loading senator data contacts the external data host, and following a link, filling a form, or submitting it shares information according to the receiving site's policies. Browser clipboard access requires a secure context such as HTTPS or localhost; if copying fails, the text is selected for manual copying.
 
 ## Community and license
 
