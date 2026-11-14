@@ -1,0 +1,13 @@
+{
+  "name": "senate-caucus-support-vanhollen",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "CC0-1.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test senators.test.js"
+  }
+}

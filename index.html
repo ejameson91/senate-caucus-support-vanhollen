@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Contact the Senate Democratic caucus</title>
+    <meta
+      name="description"
+      content="Prepare a message and find senators' contact information."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <p class="eyebrow">Make your voice heard</p>
+        <h1>Contact the Senate Democratic caucus</h1>
+        <p class="intro">
+          Ask senators to support Chris Van Hollen for Senate Democratic leader.
+        </p>
+        <p>
+          The Democratic leader would be majority leader if the party holds the
+          Senate majority.
+        </p>
+        <a class="button" href="#message">Prepare your message</a>
+      </header>
+
+      <section id="message" aria-labelledby="message-title">
+        <p class="step">01 / YOUR MESSAGE</p>
+        <h2 id="message-title">Make it your own</h2>
+        <p>
+          Add your perspective, then review and edit the draft. Your message
+          stays in this browser until you copy it.
+        </p>
+        <form id="draft-form">
+          <label for="sender-name">Your name <span>(optional)</span></label>
+          <input id="sender-name" autocomplete="name" />
+          <label for="reason"
+            >Why does this matter to you? <span>(optional)</span></label
+          >
+          <textarea
+            id="reason"
+            rows="3"
+            placeholder="Share your own perspective"
+          ></textarea>
+          <button type="submit">Generate draft</button>
+        </form>
+        <div class="draft">
+          <label for="subject">Subject</label>
+          <input
+            id="subject"
+            value="Support Chris Van Hollen for Senate Democratic leader"
+          />
+          <button type="button" id="copy-subject" class="secondary">
+            Copy subject
+          </button>
+          <label for="body">Message</label>
+          <textarea id="body" rows="10"></textarea>
+          <button type="button" id="copy-body" class="secondary">
+            Copy message
+          </button>
+          <p id="copy-status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section aria-labelledby="lookup-title">
+        <p class="step">02 / YOUR SENATORS</p>
+        <h2 id="lookup-title">Find your senators</h2>
+        <p>
+          Select your state to see both of your senators, regardless of party.
+          Senate offices often prioritize their own constituents.
+        </p>
+        <label for="state">Your state</label>
+        <select id="state">
+          <option value="">Select a state</option>
+        </select>
+        <div id="state-results" aria-live="polite"></div>
+      </section>
+
+      <section aria-labelledby="caucus-title">
+        <p class="step">03 / CONTACT THE CAUCUS</p>
+        <h2 id="caucus-title">Senate Democratic caucus</h2>
+        <p>
+          Copy your message and submit it through each senator’s contact form.
+          This app does not send messages automatically. Some offices may
+          restrict submissions to their constituents.
+        </p>
+        <p>
+          Gillibrand, Schatz, Cortez Masto, King, and Gallego are highlighted at
+          your request.
+        </p>
+        <p id="data-status" role="status" aria-live="polite">
+          Loading current senator information…
+        </p>
+        <ul id="caucus-list" class="senator-list"></ul>
+      </section>
+
+      <footer>
+        <p>
+          Senator information comes from
+          <a href="https://github.com/unitedstates/congress-legislators"
+            >congress-legislators</a
+          >. Contact links can change; confirm details on the senator’s official
+          website. Caucus membership reflects the source data and may change.
+        </p>
+        <p>
+          Contact forms may request your address and email. Review each office’s
+          policies before submitting.
+        </p>
+        <p>
+          <a href="https://www.senate.gov/senators/senators-contact.htm"
+            >Official Senate contact guidance</a
+          >
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
