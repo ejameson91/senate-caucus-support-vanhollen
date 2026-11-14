@@ -117,7 +117,7 @@ export function caucusMembers(senators) {
 export function draftMessage(name, reason) {
   const paragraphs = [
     "Dear Senator,",
-    "Though I am not one of your constituents, I urge you to support Senator Chris Van Hollen, not Senator Chuck Schumer, for Senate Majority leader. The party is in desperate need of a change in leadership, and I believe the recent midterm election gave Democrats a mandate to make that change.",
+    "I urge you to support Senator Chris Van Hollen, not Senator Chuck Schumer, for Senate Majority leader. The party is in desperate need of a change in leadership, and I believe the recent midterm election gave Democrats a mandate to make that change.",
     "Senator Van Hollen would be a far better choice to lead the caucus and serve as Senate Majority Leader. I believe he will put the interests of the people ahead of big-money donors and special interest groups.",
   ];
   if (reason.trim()) paragraphs.push(reason.trim());
