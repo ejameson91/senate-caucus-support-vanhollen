@@ -1,7 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { FORMS } from "./desktop/forms.js";
 import { prepareSelections, readTopics } from "./desktop/selects.js";
+
+test("senator picker is ordered by surname without changing its default", () => {
+  const html = readFileSync(new URL("./desktop/index.html", import.meta.url), "utf8");
+  const picker = html.match(/<select id="senator">([\s\S]*?)<\/select>/);
+  assert.ok(picker);
+  const options = [...picker[1].matchAll(/<option value="([^"]+)"( selected)?>([^<]+)<\/option>/g)];
+  assert.deepEqual(options.map((option) => option[1]), [
+    "alsobrooks", "cortezmasto", "gallego", "gillibrand", "kim", "king", "klobuchar",
+    "lujan", "murphy", "padilla", "sanders", "schatz", "schiff", "schumer", "vanhollen",
+  ]);
+  for (const [, id, , name] of options) assert.equal(name, FORMS[id].name);
+  assert.deepEqual(options.filter((option) => option[2]).map((option) => option[1]), ["gillibrand"]);
+});
 
 function fixture(id) {
   const config = FORMS[id].selects;
