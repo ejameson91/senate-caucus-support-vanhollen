@@ -12,10 +12,10 @@ function fixture(id) {
     tagName: "SELECT", labels: [{ textContent: config.topic[1] }],
     options: [option("", "Select"), option("GOV", "Government Reform"), option("H", "Housing", true)],
   };
-  const prefix = {
-    tagName: "SELECT", labels: [{ textContent: config.prefix?.[1] }],
-    options: [option("", "Select"), option("Dr.", "Dr.")],
-  };
+  const prefix = config.prefixText
+    ? { tagName: "INPUT", type: "text", labels: [{ textContent: config.prefix[1] }] }
+    : { tagName: "SELECT", labels: [{ textContent: config.prefix?.[1] }],
+        options: [option("", "Select"), option("Dr.", "Dr.")] };
   const controls = { [config.topic[0]]: topic };
   if (config.prefix) controls[config.prefix[0]] = prefix;
   const form = {
@@ -26,7 +26,7 @@ function fixture(id) {
   return { config, form, topic, prefix };
 }
 
-for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy"]) {
+for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim"]) {
   test(`${id} loads selectable topics and prepares the chosen topic`, () => {
     const { config, topic } = fixture(id);
     if (config.requireCurrentTopic) topic.value = "GOV";
@@ -59,13 +59,27 @@ test("handles available, unavailable, and absent prefixes without guessing", () 
   assert.match(prepareSelections(king.config, "Dr.", null).warnings[0], /no supported prefix/);
 });
 
-test("detects changed, hidden, and ambiguous topic controls", () => {
+test("Kim's text prefix is filled only when the expected editable input exists", () => {
+  const { config, prefix } = fixture("kim");
+  assert.deepEqual(prepareSelections(config, "Dr.", null).selected, [[prefix, "Dr."]]);
+  prefix.readOnly = true;
+  assert.throws(() => prepareSelections(config, "Dr.", null), /no fields were filled/);
+  prefix.readOnly = false;
+  prefix.type = "hidden";
+  assert.throws(() => prepareSelections(config, "Dr.", null), /no fields were filled/);
+});
+
+test("detects changed and hidden topic controls and disables ambiguous choices", () => {
   const { config, form, topic } = fixture("king");
   topic.labels[0].textContent = "Changed";
   assert.throws(() => readTopics(config), /changed/);
   topic.labels[0].textContent = config.topic[1];
-  topic.options.push({ ...topic.options[1] });
-  assert.throws(() => readTopics(config), /ambiguous/);
+  topic.options.push({ ...topic.options[1], textContent: "Another topic" });
+  assert.deepEqual(readTopics(config), [
+    { value: "GOV", label: "Government Reform", disabled: true },
+    { value: "GOV", label: "Another topic", disabled: true },
+  ]);
+  assert.throws(() => prepareSelections(config, "", { value: "GOV", label: "Another topic" }), /no longer available/);
   form.getClientRects = () => [];
   assert.throws(() => readTopics(config), /hidden/);
 });

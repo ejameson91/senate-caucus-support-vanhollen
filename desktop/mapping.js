@@ -59,7 +59,8 @@ export function fillMappedForm(data, mapping) {
     key === "subject" || key === "message" ? data[key] : data.contact[key],
   ]);
   const state = find(mapping.state[0], "SELECT", mapping.state[1]);
-  const stateValue = mapping.fullStateName ? mapping.stateNames[data.contact.state] : data.contact.state;
+  const stateValue = mapping.fullStateName ? mapping.stateNames[data.contact.state] :
+    (mapping.stateValues?.[data.contact.state] || data.contact.state);
   if (!stateValue || ![...state.options].some((option) => option.value === stateValue))
     throw new Error("Your state is unavailable on this form; no fields were filled. Complete it manually.");
   controls.push([state, stateValue]);
