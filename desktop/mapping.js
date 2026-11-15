@@ -41,10 +41,14 @@ export function fillMappedForm(data, mapping) {
   if (!form.getClientRects().length)
     throw new Error("The contact form is hidden. Open the form on the senator's page, then try filling again.");
   const find = (id, tag, label) => {
-    const control = form.querySelector(`[id="${id}"]`);
+    const controls = form.querySelectorAll(`[${mapping.byName ? "name" : "id"}="${id}"]`);
+    const control = controls.length === 1 ? controls[0] : null;
+    const actualLabel = mapping.byName
+      ? control?.labels?.[0]?.firstChild?.textContent.trim()
+      : control?.labels?.[0]?.textContent.trim();
     if (!control || control.tagName !== tag || control.disabled || control.readOnly ||
         (mapping.requireVisible && !control.getClientRects().length) ||
-        control.labels?.[0]?.textContent.trim() !== label)
+        actualLabel !== label)
       throw new Error("The contact form has changed; no fields were filled. Complete it manually.");
     return control;
   };
@@ -58,9 +62,11 @@ export function fillMappedForm(data, mapping) {
     find(id, tag, label),
     key === "subject" || key === "message" ? data[key] : data.contact[key],
   ]);
+  if (mapping.enforceLength && controls.some(([control, value]) => control.maxLength > 0 && value.length > control.maxLength))
+    throw new Error("A value exceeds this form's length limit; no fields were filled. Shorten it and try again.");
   const state = find(mapping.state[0], "SELECT", mapping.state[1]);
-  const stateValue = mapping.fullStateName ? mapping.stateNames[data.contact.state] :
-    (mapping.stateValues?.[data.contact.state] || data.contact.state);
+  const stateValue = mapping.stateValues?.[data.contact.state] ||
+    (mapping.fullStateName ? mapping.stateNames[data.contact.state] : data.contact.state);
   if (!stateValue || ![...state.options].some((option) => option.value === stateValue))
     throw new Error("Your state is unavailable on this form; no fields were filled. Complete it manually.");
   controls.push([state, stateValue]);

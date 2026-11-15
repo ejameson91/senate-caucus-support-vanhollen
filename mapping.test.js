@@ -58,22 +58,28 @@ test("does not fill anything if a field changes or the page is wrong", () => {
 function mappedFixture(id) {
   const { mapping } = FORMS[id];
   const controls = Object.fromEntries(mapping.fields.map(([field, label, , tag = "INPUT"]) => [
-    field, { tagName: tag, labels: [{ textContent: label }], value: "", getClientRects: () => [1], dispatchEvent() {} },
+    field, { tagName: tag, labels: [{ textContent: label, firstChild: { textContent: label } }], value: "", getClientRects: () => [1], dispatchEvent() {} },
   ]));
   controls[mapping.state[0]] = {
-    tagName: "SELECT", labels: [{ textContent: mapping.state[1] }], value: "",
+    tagName: "SELECT", labels: [{ textContent: mapping.state[1], firstChild: { textContent: mapping.state[1] } }], value: "",
     options: [{ value: mapping.fullStateName ? "New York" : "NY" }], getClientRects: () => [1], dispatchEvent() {},
   };
   if (mapping.prerequisite) {
     const [field, label, value = "Housing"] = mapping.prerequisite;
     controls[field] = { tagName: "SELECT", labels: [{ textContent: label }], value, getClientRects: () => [1] };
   }
-  const form = { getClientRects: () => [1], querySelector: (selector) => controls[selector.match(/^\[id="(.+)"\]$/)?.[1]] };
+  const form = {
+    getClientRects: () => [1],
+    querySelectorAll: (selector) => {
+      const control = controls[selector.match(/^\[(?:id|name)="(.+)"\]$/)?.[1]];
+      return control ? [control] : [];
+    },
+  };
   globalThis.document = { querySelector: (selector) => selector === mapping.form ? form : null };
   return { controls, mapping: { ...mapping, stateNames: CONTACT_STATES } };
 }
 
-for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim"]) {
+for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "sanders", "schumer", "vanhollen"]) {
   test(`${id} fills expected fields including email confirmation`, () => {
     const { controls, mapping } = mappedFixture(id);
     assert.match(fillMappedForm(data, mapping), /does not submit/);
@@ -86,14 +92,39 @@ for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego
   test(`${id} rejects changed fields and unsupported states before filling`, () => {
     const { controls, mapping } = mappedFixture(id);
     controls[mapping.fields.at(-1)[0]].labels[0].textContent = "Changed";
+    controls[mapping.fields.at(-1)[0]].labels[0].firstChild.textContent = "Changed";
     assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
     assert.equal(controls[mapping.fields[0][0]].value, "");
     controls[mapping.fields.at(-1)[0]].labels[0].textContent = mapping.fields.at(-1)[1];
+    controls[mapping.fields.at(-1)[0]].labels[0].firstChild.textContent = mapping.fields.at(-1)[1];
     controls[mapping.state[0]].options = [];
     assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
     assert.equal(controls[mapping.fields[0][0]].value, "");
   });
 }
+
+test("Sanders uses its DC option and rejects oversized messages before filling", () => {
+  const { controls, mapping } = mappedFixture("sanders");
+  controls.State.options = [{ value: "Washington DC" }];
+  const dcData = { ...data, contact: { ...data.contact, state: "DC" } };
+  controls["your-message"].maxLength = 5;
+  assert.throws(() => fillMappedForm(dcData, mapping), /length limit/);
+  assert.equal(controls.FirstName.value, "");
+  controls["your-message"].maxLength = 2000;
+  fillMappedForm(dcData, mapping);
+  assert.equal(controls.State.value, "Washington DC");
+});
+
+test("Sanders refuses ambiguous named controls", () => {
+  const { controls, mapping } = mappedFixture("sanders");
+  const form = globalThis.document.querySelector(mapping.form);
+  const query = form.querySelectorAll;
+  form.querySelectorAll = (selector) => selector === '[name="FirstName"]'
+    ? [controls.FirstName, controls.FirstName]
+    : query(selector);
+  assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
+  assert.equal(controls.FirstName.value, "");
+});
 
 test("Schatz rejects unavailable territories without filling any fields", () => {
   const { controls, mapping } = mappedFixture("schatz");

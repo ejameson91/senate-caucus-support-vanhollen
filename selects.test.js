@@ -21,12 +21,16 @@ function fixture(id) {
   const form = {
     getClientRects: () => [1],
     querySelector: (selector) => controls[selector.match(/^\[id="(.+)"\]$/)?.[1]],
+    querySelectorAll: (selector) => {
+      const control = controls[selector.match(/^\[(?:id|name)="(.+)"\]$/)?.[1]];
+      return control ? [control] : [];
+    },
   };
   globalThis.document = { querySelector: (selector) => selector === config.form ? form : null };
   return { config, form, topic, prefix };
 }
 
-for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim"]) {
+for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "schumer", "vanhollen"]) {
   test(`${id} loads selectable topics and prepares the chosen topic`, () => {
     const { config, topic } = fixture(id);
     if (config.requireCurrentTopic) topic.value = "GOV";
@@ -43,6 +47,37 @@ for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy", "sch
     assert.throws(() => prepareSelections(config, "", { value: "GOV", label: "Old label" }), /no longer available/);
   });
 }
+
+test("Sanders loads checkbox topics and prepares the named prefix and issue", () => {
+  const config = FORMS.sanders.selects;
+  const prefix = {
+    tagName: "SELECT", labels: [{ firstChild: { textContent: " Prefix" } }],
+    options: [{ value: "Dr.", textContent: "Dr.", disabled: false, closest: () => null }],
+  };
+  const issues = [
+    { type: "checkbox", value: "Housing", labels: [{ textContent: "Housing" }] },
+    { type: "checkbox", value: "Agriculture", labels: [{ textContent: "Agriculture" }] },
+  ];
+  const group = {
+    parentElement: { querySelector: () => ({ textContent: "Legislative Issue *" }) },
+    querySelectorAll: () => issues,
+  };
+  globalThis.document = {
+    querySelector: () => ({
+      getClientRects: () => [1],
+      querySelector: (selector) => selector === '[data-name="Topic"]' ? group : null,
+      querySelectorAll: (selector) => selector === '[name="Prefix"]' ? [prefix] : [],
+    }),
+  };
+  assert.deepEqual(readTopics(config), [
+    { value: "Housing", label: "Housing" },
+    { value: "Agriculture", label: "Agriculture" },
+  ]);
+  const result = prepareSelections(config, "Dr.", { value: "Housing", label: "Housing" });
+  assert.deepEqual(result.selected, [[prefix, "Dr."], [issues[0], "Housing", issues]]);
+  issues[0].labels[0].textContent = "Changed";
+  assert.throws(() => prepareSelections(config, "Dr.", { value: "Housing", label: "Housing" }), /no fields were filled/i);
+});
 
 test("Murphy's helper topic must match the topic already selected on the form", () => {
   const { config, topic } = fixture("murphy");
