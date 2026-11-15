@@ -123,8 +123,19 @@ ipcMain.handle("fill-form", async (event, id, topicValue) => {
       const data = ${JSON.stringify(contactData)};
       const selection = (${prepareSelections.toString()})(${JSON.stringify(form.selects)}, data.contact.prefix, ${JSON.stringify(topic)});
       (${form.fill.toString()})(data, ${JSON.stringify({ ...form.mapping, stateNames: CONTACT_STATES })});
-      for (const [control, value] of selection.selected) {
-        control.value = value;
+      for (const [control, value, checkboxes] of selection.selected) {
+        if (checkboxes) {
+          for (const checkbox of checkboxes) {
+            if (checkbox !== control && checkbox.checked) {
+              checkbox.checked = false;
+              checkbox.dispatchEvent(new Event("input", { bubbles: true }));
+              checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+          }
+          control.checked = true;
+        } else {
+          control.value = value;
+        }
         control.dispatchEvent(new Event("input", { bubbles: true }));
         control.dispatchEvent(new Event("change", { bubbles: true }));
       }
