@@ -58,9 +58,15 @@ loadTopics.addEventListener("click", async () => {
   try {
     const options = await window.helper.loadTopics(selected);
     if (senator.value !== selected) return;
-    for (const option of options) topic.add(new Option(option.label, option.value));
+    for (const option of options) {
+      const element = new Option(option.label, option.value);
+      element.disabled = Boolean(option.disabled);
+      topic.add(element);
+    }
     topic.disabled = false;
-    status.textContent = "Choose a topic, or leave it to select on the form.";
+    status.textContent = options.some((option) => option.disabled)
+      ? "Some topics have ambiguous values and must be selected on the form. Choose another topic here, or leave it to select on the form."
+      : "Choose a topic, or leave it to select on the form.";
   } catch (error) {
     if (senator.value === selected) status.textContent = `Could not load topics: ${error.message}`;
   }

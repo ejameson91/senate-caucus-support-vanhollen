@@ -116,7 +116,7 @@ ipcMain.handle("fill-form", async (event, id, topicValue) => {
   const { form, formWindow } = getOpenForm(id);
   if (!contactData) throw new Error("Import a contact export first.");
   if (typeof topicValue !== "string") throw new Error("Invalid topic selection.");
-  const topic = topicValue ? topicsByForm.get(id)?.find((item) => item.value === topicValue) : null;
+  const topic = topicValue ? topicsByForm.get(id)?.find((item) => item.value === topicValue && !item.disabled) : null;
   if (topicValue && !topic) throw new Error("Load topics again and choose a topic.");
   const result = await formWindow.webContents.executeJavaScript(
     `(() => {

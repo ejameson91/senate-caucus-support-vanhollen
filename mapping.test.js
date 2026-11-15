@@ -73,7 +73,7 @@ function mappedFixture(id) {
   return { controls, mapping: { ...mapping, stateNames: CONTACT_STATES } };
 }
 
-for (const id of ["king", "cortezmasto", "padilla", "murphy"]) {
+for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim"]) {
   test(`${id} fills expected fields including email confirmation`, () => {
     const { controls, mapping } = mappedFixture(id);
     assert.match(fillMappedForm(data, mapping), /does not submit/);
@@ -94,6 +94,20 @@ for (const id of ["king", "cortezmasto", "padilla", "murphy"]) {
     assert.equal(controls[mapping.fields[0][0]].value, "");
   });
 }
+
+test("Schatz rejects unavailable territories without filling any fields", () => {
+  const { controls, mapping } = mappedFixture("schatz");
+  const territoryData = { ...data, contact: { ...data.contact, state: "Puerto Rico" } };
+  assert.throws(() => fillMappedForm(territoryData, mapping), /state is unavailable/);
+  assert.equal(controls[mapping.fields[0][0]].value, "");
+});
+
+test("Klobuchar maps exported territory names to the form's abbreviations", () => {
+  const { controls, mapping } = mappedFixture("klobuchar");
+  controls[mapping.state[0]].options = [{ value: "VI" }];
+  fillMappedForm({ ...data, contact: { ...data.contact, state: "U.S. Virgin Islands" } }, mapping);
+  assert.equal(controls[mapping.state[0]].value, "VI");
+});
 
 for (const id of ["padilla", "murphy"]) {
   test(`${id} requires its initial selection and visible fields`, () => {
