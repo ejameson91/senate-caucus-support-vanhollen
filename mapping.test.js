@@ -62,7 +62,10 @@ function mappedFixture(id) {
   ]));
   controls[mapping.state[0]] = {
     tagName: "SELECT", labels: [{ textContent: mapping.state[1], firstChild: { textContent: mapping.state[1] } }], value: "",
-    options: [{ value: mapping.fullStateName ? "New York" : "NY" }], getClientRects: () => [1], dispatchEvent() {},
+    options: [{
+      value: mapping.stateCodeSuffix ? "38_NY" : mapping.fullStateName ? "New York" : "NY",
+      textContent: "New York", closest: () => null,
+    }], getClientRects: () => [1], dispatchEvent() {},
   };
   if (mapping.prerequisite) {
     const [field, label, value = "Housing"] = mapping.prerequisite;
@@ -79,14 +82,14 @@ function mappedFixture(id) {
   return { controls, mapping: { ...mapping, stateNames: CONTACT_STATES } };
 }
 
-for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "sanders", "schumer", "vanhollen"]) {
+for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "sanders", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren"]) {
   test(`${id} fills expected fields including email confirmation`, () => {
     const { controls, mapping } = mappedFixture(id);
     assert.match(fillMappedForm(data, mapping), /does not submit/);
     for (const [field, , key] of mapping.fields) {
       assert.equal(controls[field].value, key === "subject" || key === "message" ? data[key] : data.contact[key]);
     }
-    assert.equal(controls[mapping.state[0]].value, mapping.fullStateName ? "New York" : "NY");
+    assert.equal(controls[mapping.state[0]].value, mapping.stateCodeSuffix ? "38_NY" : mapping.fullStateName ? "New York" : "NY");
   });
 
   test(`${id} rejects changed fields and unsupported states before filling`, () => {
@@ -102,6 +105,27 @@ for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego
     assert.equal(controls[mapping.fields[0][0]].value, "");
   });
 }
+
+test("Slotkin selects an unambiguous state code and rejects missing or duplicate matches", () => {
+  const { controls, mapping } = mappedFixture("slotkin");
+  const state = controls[mapping.state[0]];
+  const option = (value, label, disabled = false) => ({ value, textContent: label, disabled, closest: () => null });
+  state.options = [option("8_DC", "D.C."), option("9_D.C.", "D.C."), option("56_VI", "Virgin Islands")];
+  fillMappedForm({ ...data, contact: { ...data.contact, state: "DC" } }, mapping);
+  assert.equal(state.value, "8_DC");
+  fillMappedForm({ ...data, contact: { ...data.contact, state: "U.S. Virgin Islands" } }, mapping);
+  assert.equal(state.value, "56_VI");
+  controls[mapping.fields[0][0]].value = "";
+  state.options = [option("2_VI", "Virgin Islands"), option("56_VI", "Virgin Islands")];
+  assert.throws(() => fillMappedForm({ ...data, contact: { ...data.contact, state: "U.S. Virgin Islands" } }, mapping), /state is unavailable/);
+  assert.equal(controls[mapping.fields[0][0]].value, "");
+  state.options = [option("56_VI", "Virgin Islands", true)];
+  assert.throws(() => fillMappedForm({ ...data, contact: { ...data.contact, state: "U.S. Virgin Islands" } }, mapping), /state is unavailable/);
+  assert.equal(controls[mapping.fields[0][0]].value, "");
+  state.options = [option("56_VI", "Other")];
+  assert.throws(() => fillMappedForm({ ...data, contact: { ...data.contact, state: "U.S. Virgin Islands" } }, mapping), /state is unavailable/);
+  assert.equal(controls[mapping.fields[0][0]].value, "");
+});
 
 test("Sanders uses its DC option and rejects oversized messages before filling", () => {
   const { controls, mapping } = mappedFixture("sanders");
@@ -171,4 +195,13 @@ test("only the exact configured form origin and path are accepted", () => {
   assert.equal(isFormUrl("https://www.king.senate.gov.evil.example/contact", url), false);
   assert.equal(isFormUrl("https://www.king.senate.gov/other", url), false);
   assert.equal(isFormUrl("not a url", url), false);
+});
+
+test("Slotkin's shared outreach URL requires the exact form query", () => {
+  const url = FORMS.slotkin.url;
+  assert.equal(isFormUrl(url, url), true);
+  assert.equal(isFormUrl(url.replace("SenSlotkin", "AnotherOffice"), url), false);
+  assert.equal(isFormUrl(url.replace("100053", "100054"), url), false);
+  assert.equal(isFormUrl(url.split("?")[0], url), false);
+  assert.equal(isFormUrl(`${url}&extra=1`, url), false);
 });
