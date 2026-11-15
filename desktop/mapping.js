@@ -65,8 +65,15 @@ export function fillMappedForm(data, mapping) {
   if (mapping.enforceLength && controls.some(([control, value]) => control.maxLength > 0 && value.length > control.maxLength))
     throw new Error("A value exceeds this form's length limit; no fields were filled. Shorten it and try again.");
   const state = find(mapping.state[0], "SELECT", mapping.state[1]);
-  const stateValue = mapping.stateValues?.[data.contact.state] ||
+  let stateValue = mapping.stateValues?.[data.contact.state] ||
     (mapping.fullStateName ? mapping.stateNames[data.contact.state] : data.contact.state);
+  if (mapping.stateCodeSuffix && stateValue) {
+    const stateLabel = mapping.stateLabels?.[data.contact.state] || mapping.stateNames[data.contact.state];
+    const matches = [...state.options].filter((option) =>
+      /^\d+_/.test(option.value) && option.value.endsWith(`_${stateValue}`) &&
+      option.textContent.trim() === stateLabel && !option.disabled && !option.closest("optgroup:disabled"));
+    stateValue = matches.length === 1 ? matches[0].value : "";
+  }
   if (!stateValue || ![...state.options].some((option) => option.value === stateValue))
     throw new Error("Your state is unavailable on this form; no fields were filled. Complete it manually.");
   controls.push([state, stateValue]);

@@ -417,6 +417,157 @@ export const FORMS = {
       state: ["input-B03E0669-4040-F985-52CD-11B231195172", "State*"],
     },
   },
+  coons: {
+    name: "Chris Coons",
+    url: "https://www.coons.senate.gov/contact/share-your-opinion/",
+    fill: fillMappedForm,
+    selects: {
+      form: "#gform_2",
+      topic: ["input_2_17", "Message Topic*"],
+      prefix: ["input_2_39", "Prefix*"],
+      prefixRequired: true,
+    },
+    mapping: {
+      form: "#gform_2",
+      fields: [
+        ["input_2_2", "First Name*", "firstName"],
+        ["input_2_3", "Last Name*", "lastName"],
+        ["input_2_9", "Enter Email", "email"],
+        ["input_2_9_2", "Confirm Email", "email"],
+        ["input_2_41", "Phone Number*", "phone"],
+        ["input_2_6_1", "Street Address *", "address"],
+        ["input_2_6_2", "Address Line 2", "address2"],
+        ["input_2_6_3", "City *", "city"],
+        ["input_2_6_5", "ZIP Code *", "zip"],
+        ["input_2_11", "Subject*", "subject"],
+        ["input_2_12", "Message*", "message", "TEXTAREA"],
+      ],
+      state: ["input_2_6_4", "State *"],
+      fullStateName: true,
+    },
+  },
+  booker: {
+    name: "Cory Booker",
+    url: "https://www.booker.senate.gov/contact/write-to-cory/form",
+    fill: fillMappedForm,
+    selects: {
+      form: '[id="A3B5C321-D12C-8E6E-88CB-0573BC32917A"]',
+      topic: ["topic", "Topic*"],
+      prefix: ["input-A3B5C462-01BC-34E6-87C8-15D2EED5DDFC", "Prefix*"],
+      prefixRequired: true,
+    },
+    mapping: {
+      form: '[id="A3B5C321-D12C-8E6E-88CB-0573BC32917A"]',
+      fields: [
+        ["firstName", "First Name*", "firstName"],
+        ["input-A3B5C52C-F8A8-2710-DF6D-651F4FF92ABE", "Last Name*", "lastName"],
+        ["input-A3B5C5C7-D513-430A-A98C-9A0FE8E83F28", "Street Address*", "address"],
+        ["input-A3B5C362-0B8D-FF38-0C29-EF3135773953", "Street Address (2)", "address2"],
+        ["input-A3B5C5A2-96F9-1BAA-94C4-EE080A0F884B", "City*", "city"],
+        ["input-A3B5C438-CBC9-4E11-BB60-7931A4433674", "Zip*", "zip"],
+        ["email", "Email*", "email"],
+        ["input-A3B5C3D6-9F71-E948-98DB-2C2BEB416530", "Verify Email*", "email"],
+        ["input-A3B5C492-C1FA-436F-B863-9D497858366F", "Phone Number*", "phone"],
+        ["input-A3B5C4BA-9AFE-6121-C1DE-4FF4D0589435", "Message Subject*", "subject"],
+        ["input-A3B5C42A-BE5B-1B61-0E80-7E5EA0E4E23A", "Message*", "message", "TEXTAREA"],
+      ],
+      state: ["input-A3B5C41D-BFD6-427A-4278-903BADB8265F", "State*"],
+    },
+  },
+  markey: {
+    name: "Ed Markey",
+    url: "https://www.markey.senate.gov/contact/share-your-opinion",
+    fill: fillMappedForm,
+    selects: {
+      form: '[id="3D500BE0-0F27-00E1-5D94-88C6986AA0E8"]',
+      topic: ["message-topic", "Message Topic"],
+      prefix: ["input-42427839-032A-AC44-2F70-9AA66E270A25", "Prefix"],
+    },
+    mapping: {
+      form: '[id="3D500BE0-0F27-00E1-5D94-88C6986AA0E8"]',
+      fields: [
+        ["input-42427875-9CC0-6E83-5422-011FADF4B2A0", "First Name*", "firstName"],
+        ["input-424278A8-A33D-4812-7806-73A81B0352DB", "Last Name*", "lastName"],
+        ["input-424E4036-EBDF-B0F8-7F83-3AAD2C2D7D7C", "Street Address*", "address"],
+        ["input-424E406A-FB7E-26D6-2668-E6B939D0FBA0", "Street Address (2)", "address2"],
+        ["input-424E40A0-03FE-88D8-1322-61BB69A2E2A6", "City*", "city"],
+        ["input-424E4101-BEB0-D606-7706-803EF69290F1", "Zip*", "zip"],
+        ["email", "Email*", "email"],
+        ["input-7622D22B-DFBA-1747-E2FB-BE7F840C5C45", "Verify Email*", "email"],
+        ["input-42717B40-9F86-3CB6-E002-E1CF8FF3DAD5", "Subject", "subject"],
+        ["input-4273AC30-BD7A-71CE-C404-6C3C23E22134", "Comments", "message", "TEXTAREA"],
+      ],
+      state: ["input-424E40CF-05A3-7E5A-5C1F-7132981A8170", "State*"],
+    },
+  },
+  slotkin: {
+    name: "Elissa Slotkin",
+    url: "https://outreach.senate.gov/iqextranet/EForm.aspx?__cid=SenSlotkin&__fid=100053&iframe=Y",
+    fill: fillMappedForm,
+    selects: {
+      form: "#eform",
+      topic: ["qi_2", "RequiredTopic"],
+      prefix: ["qi_1_prefix", "Prefix"],
+      prefixText: true,
+    },
+    mapping: {
+      form: "#eform",
+      fields: [
+        ["qi_1_first_name", "RequiredFirst Name", "firstName"],
+        ["qi_1_last_name", "RequiredLast Name", "lastName"],
+        ["qi_1_addr_1", "RequiredStreet Address", "address"],
+        ["qi_1_addr_2", "Address Line 2", "address2"],
+        ["qi_1_city", "RequiredCity", "city"],
+        ["qi_1_zip", "RequiredZip", "zip"],
+        ["qi_1_hphone", "Phone", "phone"],
+        ["qi_1_email", "RequiredEmail", "email"],
+        ["qi_3", "RequiredSubject", "subject"],
+        ["qi_4", "RequiredMessage", "message", "TEXTAREA"],
+      ],
+      state: ["qi_1_state", "RequiredState"],
+      stateCodeSuffix: true,
+      stateValues: {
+        "American Samoa": "AS",
+        Guam: "GU",
+        "Northern Marianas Islands": "MP",
+        "Puerto Rico": "PR",
+        "U.S. Virgin Islands": "VI",
+      },
+      stateLabels: {
+        DC: "D.C.",
+        "American Samoa": "America Samoa",
+        "U.S. Virgin Islands": "Virgin Islands",
+      },
+    },
+  },
+  warren: {
+    name: "Elizabeth Warren",
+    url: "https://www.warren.senate.gov/contact/share-your-opinion/",
+    fill: fillMappedForm,
+    selects: {
+      form: "#gform_12",
+      topic: ["input_12_10", "Topic*"],
+      prefix: ["input_12_3", "Prefix*"],
+      prefixRequired: true,
+    },
+    mapping: {
+      form: "#gform_12",
+      fields: [
+        ["input_12_4", "First Name*", "firstName"],
+        ["input_12_5", "Last Name*", "lastName"],
+        ["input_12_7", "Phone Number*", "phone"],
+        ["input_12_8", "Email*", "email"],
+        ["input_12_9_1", "Street Address", "address"],
+        ["input_12_9_2", "Address Line 2", "address2"],
+        ["input_12_9_3", "City", "city"],
+        ["input_12_9_5", "ZIP Code", "zip"],
+        ["input_12_11", "Subject*", "subject"],
+        ["input_12_12", "Message", "message", "TEXTAREA"],
+      ],
+      state: ["input_12_9_4", "State"],
+      fullStateName: true,
+    },
+  },
 };
 
 export function isFormUrl(value, expected) {
@@ -424,7 +575,8 @@ export function isFormUrl(value, expected) {
     const url = new URL(value);
     const target = new URL(expected);
     return url.origin === target.origin &&
-      url.pathname.replace(/\/+$/, "") === target.pathname.replace(/\/+$/, "");
+      url.pathname.replace(/\/+$/, "") === target.pathname.replace(/\/+$/, "") &&
+      (!target.search || url.search === target.search);
   } catch {
     return false;
   }
