@@ -61,7 +61,7 @@ function mappedFixture(id) {
     field, { tagName: tag, labels: [{ textContent: label, firstChild: { textContent: label } }], value: "", getClientRects: () => [1], dispatchEvent() {} },
   ]));
   controls[mapping.state[0]] = {
-    tagName: "SELECT", labels: [{ textContent: mapping.state[1], firstChild: { textContent: mapping.state[1] } }], value: "",
+    tagName: mapping.stateText ? "INPUT" : "SELECT", labels: [{ textContent: mapping.state[1], firstChild: { textContent: mapping.state[1] } }], value: "",
     options: [{
       value: mapping.stateCodeSuffix ? "38_NY" : mapping.fullStateName ? "New York" : "NY",
       textContent: "New York", closest: () => null,
@@ -82,12 +82,12 @@ function mappedFixture(id) {
   return { controls, mapping: { ...mapping, stateNames: CONTACT_STATES } };
 }
 
-for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "sanders", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren"]) {
+for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "sanders", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren", "peters", "reed", "rosen", "shaheen", "merkley", "fetterman", "hickenlooper", "ossoff", "bluntrochester", "hassan"]) {
   test(`${id} fills expected fields including email confirmation`, () => {
     const { controls, mapping } = mappedFixture(id);
     assert.match(fillMappedForm(data, mapping), /does not submit/);
     for (const [field, , key] of mapping.fields) {
-      assert.equal(controls[field].value, key === "subject" || key === "message" ? data[key] : data.contact[key]);
+      assert.equal(controls[field].value, key === "combinedAddress" ? data.contact.address : key === "subject" || key === "message" ? data[key] : data.contact[key]);
     }
     assert.equal(controls[mapping.state[0]].value, mapping.stateCodeSuffix ? "38_NY" : mapping.fullStateName ? "New York" : "NY");
   });
@@ -100,11 +100,39 @@ for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego
     assert.equal(controls[mapping.fields[0][0]].value, "");
     controls[mapping.fields.at(-1)[0]].labels[0].textContent = mapping.fields.at(-1)[1];
     controls[mapping.fields.at(-1)[0]].labels[0].firstChild.textContent = mapping.fields.at(-1)[1];
-    controls[mapping.state[0]].options = [];
+    if (mapping.stateText) controls[mapping.state[0]].readOnly = true;
+    else controls[mapping.state[0]].options = [];
     assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
     assert.equal(controls[mapping.fields[0][0]].value, "");
   });
 }
+
+test("Merkley fills a validated text state with its full name", () => {
+  const { controls, mapping } = mappedFixture("merkley");
+  fillMappedForm(data, mapping);
+  assert.equal(controls[mapping.state[0]].value, "New York");
+  controls[mapping.fields[0][0]].value = "";
+  controls[mapping.state[0]].labels[0].textContent = "Changed";
+  assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
+  assert.equal(controls[mapping.fields[0][0]].value, "");
+});
+
+test("Ossoff combines address lines and maps territory codes", () => {
+  const { controls, mapping } = mappedFixture("ossoff");
+  controls[mapping.state[0]].options = [{ value: "VI" }];
+  fillMappedForm({ ...data, contact: { ...data.contact, address2: "Unit 2", state: "U.S. Virgin Islands" } }, mapping);
+  assert.equal(controls["form-field-field_ecb1f5b"].value, "123 Example St\nUnit 2");
+  assert.equal(controls[mapping.state[0]].value, "VI");
+});
+
+test("Fetterman refuses oversized messages before filling", () => {
+  const { controls, mapping } = mappedFixture("fetterman");
+  controls.input_3_6.maxLength = 1200;
+  assert.throws(() => fillMappedForm({ ...data, message: "x".repeat(1201) }, mapping), /length limit/);
+  assert.equal(controls.input_3_1_3.value, "");
+  fillMappedForm({ ...data, message: "x".repeat(1200) }, mapping);
+  assert.equal(controls.input_3_6.value.length, 1200);
+});
 
 test("Slotkin selects an unambiguous state code and rejects missing or duplicate matches", () => {
   const { controls, mapping } = mappedFixture("slotkin");
