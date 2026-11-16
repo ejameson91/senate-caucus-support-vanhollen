@@ -10,8 +10,9 @@ test("senator picker is ordered by surname without changing its default", () => 
   assert.ok(picker);
   const options = [...picker[1].matchAll(/<option value="([^"]+)"( selected)?>([^<]+)<\/option>/g)];
   assert.deepEqual(options.map((option) => option[1]), [
-    "alsobrooks", "booker", "coons", "cortezmasto", "gallego", "gillibrand", "kim", "king", "klobuchar",
-    "lujan", "markey", "murphy", "padilla", "sanders", "schatz", "schiff", "schumer", "slotkin", "vanhollen", "warren",
+    "alsobrooks", "bluntrochester", "booker", "coons", "cortezmasto", "fetterman", "gallego", "gillibrand",
+    "hassan", "hickenlooper", "kim", "king", "klobuchar", "lujan", "markey", "merkley", "murphy", "ossoff",
+    "padilla", "peters", "reed", "rosen", "sanders", "schatz", "schiff", "schumer", "shaheen", "slotkin", "vanhollen", "warren",
   ]);
   for (const [, id, , name] of options) assert.equal(name, FORMS[id].name);
   assert.deepEqual(options.filter((option) => option[2]).map((option) => option[1]), ["gillibrand"]);
@@ -44,7 +45,7 @@ function fixture(id) {
   return { config, form, topic, prefix };
 }
 
-for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren"]) {
+for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren", "peters", "reed", "rosen", "shaheen", "merkley", "fetterman", "hickenlooper", "ossoff", "bluntrochester", "hassan"]) {
   test(`${id} loads selectable topics and prepares the chosen topic`, () => {
     const { config, topic } = fixture(id);
     if (config.requireCurrentTopic) topic.value = "GOV";

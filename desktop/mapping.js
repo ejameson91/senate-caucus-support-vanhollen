@@ -60,11 +60,11 @@ export function fillMappedForm(data, mapping) {
   }
   const controls = mapping.fields.map(([id, label, key, tag = "INPUT"]) => [
     find(id, tag, label),
-    key === "subject" || key === "message" ? data[key] : data.contact[key],
+    key === "subject" || key === "message" ? data[key]
+      : key === "combinedAddress" ? [data.contact.address, data.contact.address2].filter(Boolean).join("\n")
+        : data.contact[key],
   ]);
-  if (mapping.enforceLength && controls.some(([control, value]) => control.maxLength > 0 && value.length > control.maxLength))
-    throw new Error("A value exceeds this form's length limit; no fields were filled. Shorten it and try again.");
-  const state = find(mapping.state[0], "SELECT", mapping.state[1]);
+  const state = find(mapping.state[0], mapping.stateText ? "INPUT" : "SELECT", mapping.state[1]);
   let stateValue = mapping.stateValues?.[data.contact.state] ||
     (mapping.fullStateName ? mapping.stateNames[data.contact.state] : data.contact.state);
   if (mapping.stateCodeSuffix && stateValue) {
@@ -74,9 +74,11 @@ export function fillMappedForm(data, mapping) {
       option.textContent.trim() === stateLabel && !option.disabled && !option.closest("optgroup:disabled"));
     stateValue = matches.length === 1 ? matches[0].value : "";
   }
-  if (!stateValue || ![...state.options].some((option) => option.value === stateValue))
+  if (!stateValue || (!mapping.stateText && ![...state.options].some((option) => option.value === stateValue)))
     throw new Error("Your state is unavailable on this form; no fields were filled. Complete it manually.");
   controls.push([state, stateValue]);
+  if (mapping.enforceLength && controls.some(([control, value]) => control.maxLength > 0 && value.length > control.maxLength))
+    throw new Error("A value exceeds this form's length limit; no fields were filled. Shorten it and try again.");
   for (const [control, value] of controls) {
     control.value = value;
     control.dispatchEvent(new Event("input", { bubbles: true }));
