@@ -10,9 +10,11 @@ test("senator picker is ordered by surname without changing its default", () => 
   assert.ok(picker);
   const options = [...picker[1].matchAll(/<option value="([^"]+)"( selected)?>([^<]+)<\/option>/g)];
   assert.deepEqual(options.map((option) => option[1]), [
-    "alsobrooks", "bluntrochester", "booker", "coons", "cortezmasto", "fetterman", "gallego", "gillibrand",
-    "hassan", "hickenlooper", "kim", "king", "klobuchar", "lujan", "markey", "merkley", "murphy", "ossoff",
-    "padilla", "peters", "reed", "rosen", "sanders", "schatz", "schiff", "schumer", "shaheen", "slotkin", "vanhollen", "warren",
+    "alsobrooks", "baldwin", "bennet", "blumenthal", "bluntrochester", "booker", "cantwell", "coons", "cortezmasto",
+    "duckworth", "fetterman", "gallego", "gillibrand", "hassan", "heinrich", "hickenlooper", "hirono", "kaine", "kelly",
+    "kim", "king", "klobuchar", "lujan", "markey", "merkley", "murphy", "murray", "ossoff", "padilla", "peters", "reed",
+    "rosen", "sanders", "schatz", "schiff", "schumer", "shaheen", "slotkin", "smith", "vanhollen", "warner", "warnock",
+    "warren", "welch", "whitehouse", "wyden",
   ]);
   for (const [, id, , name] of options) assert.equal(name, FORMS[id].name);
   assert.deepEqual(options.filter((option) => option[2]).map((option) => option[1]), ["gillibrand"]);
@@ -24,14 +26,15 @@ function fixture(id) {
     value, textContent: label, disabled, closest: () => null,
   });
   const topic = {
-    tagName: "SELECT", labels: [{ textContent: config.topic[1] }],
-    options: [option("", "Select"), option("GOV", "Government Reform"), option("H", "Housing", true)],
+    tagName: "SELECT", name: config.topic?.[1], labels: [{ textContent: config.topic?.[1] }], getClientRects: () => [1],
+    options: [option(id === "murray" ? "Select a topic..." : "", config.topicPlaceholder || "Select"), option("GOV", "Government Reform"), option("H", "Housing", true)],
   };
   const prefix = config.prefixText
     ? { tagName: "INPUT", type: "text", labels: [{ textContent: config.prefix[1] }] }
-    : { tagName: "SELECT", labels: [{ textContent: config.prefix?.[1] }],
+    : { tagName: "SELECT", labels: [{ textContent: config.prefix?.[1] }], getClientRects: () => [1],
         options: [option("", "Select"), option("Dr.", "Dr.")] };
-  const controls = { [config.topic[0]]: topic };
+  const controls = {};
+  if (config.topic) controls[config.topic[0]] = topic;
   if (config.prefix) controls[config.prefix[0]] = prefix;
   const form = {
     getClientRects: () => [1],
@@ -45,7 +48,7 @@ function fixture(id) {
   return { config, form, topic, prefix };
 }
 
-for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren", "peters", "reed", "rosen", "shaheen", "merkley", "fetterman", "hickenlooper", "ossoff", "bluntrochester", "hassan"]) {
+for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren", "peters", "reed", "rosen", "shaheen", "merkley", "fetterman", "hickenlooper", "ossoff", "bluntrochester", "hassan", "cantwell", "kelly", "heinrich", "hirono", "bennet", "murray", "welch", "warnock", "blumenthal", "wyden", "baldwin", "duckworth", "kaine", "smith"]) {
   test(`${id} loads selectable topics and prepares the chosen topic`, () => {
     const { config, topic } = fixture(id);
     if (config.requireCurrentTopic) topic.value = "GOV";
@@ -62,6 +65,41 @@ for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy", "sch
     assert.throws(() => prepareSelections(config, "", { value: "GOV", label: "Old label" }), /no longer available/);
   });
 }
+
+for (const id of ["warner", "whitehouse"]) {
+  test(`${id} reports no topic field and rejects a stale topic`, () => {
+    const { config } = fixture(id);
+    assert.throws(() => readTopics(config), /no topic field/);
+    assert.deepEqual(prepareSelections(config, "", null).warnings, ["This form has no topic field."]);
+    assert.throws(() => prepareSelections(config, "", { value: "GOV", label: "Government Reform" }), /no fields were filled/);
+  });
+}
+
+test("Smith rejects a changed topic name or placeholder", () => {
+  const { config, topic } = fixture("smith");
+  topic.name = "changed";
+  assert.throws(() => readTopics(config), /changed/);
+  assert.throws(() => prepareSelections(config, "", { value: "GOV", label: "Government Reform" }), /no fields were filled/);
+  topic.name = config.topic[1];
+  topic.options[0].textContent = "Changed";
+  assert.throws(() => readTopics(config), /changed/);
+  assert.throws(() => prepareSelections(config, "", { value: "GOV", label: "Government Reform" }), /no fields were filled/);
+});
+
+test("Murray excludes its nonempty placeholder and rejects it as a topic", () => {
+  const { config } = fixture("murray");
+  assert.deepEqual(readTopics(config), [{ value: "GOV", label: "Government Reform" }]);
+  assert.throws(() => prepareSelections(config, "", { value: "Select a topic...", label: "Select a topic..." }), /no longer available/);
+});
+
+test("Baldwin rejects hidden topic and prefix controls", () => {
+  const { config, topic, prefix } = fixture("baldwin");
+  topic.getClientRects = () => [];
+  assert.throws(() => readTopics(config), /hidden/);
+  assert.throws(() => prepareSelections(config, "", { value: "GOV", label: "Government Reform" }), /no fields were filled/);
+  prefix.getClientRects = () => [];
+  assert.throws(() => prepareSelections(config, "Dr.", null), /no fields were filled/);
+});
 
 test("Sanders loads checkbox topics and prepares the named prefix and issue", () => {
   const config = FORMS.sanders.selects;
