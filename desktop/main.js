@@ -123,21 +123,26 @@ ipcMain.handle("fill-form", async (event, id, topicValue) => {
       const data = ${JSON.stringify(contactData)};
       const selection = (${prepareSelections.toString()})(${JSON.stringify(form.selects)}, data.contact.prefix, ${JSON.stringify(topic)});
       (${form.fill.toString()})(data, ${JSON.stringify({ ...form.mapping, stateNames: CONTACT_STATES })});
+      const notify = (control) => {
+        for (const type of ["input", "change"]) {
+          const event = document.createEvent("Event");
+          event.initEvent(type, true, false);
+          control.dispatchEvent(event);
+        }
+      };
       for (const [control, value, checkboxes] of selection.selected) {
         if (checkboxes) {
           for (const checkbox of checkboxes) {
             if (checkbox !== control && checkbox.checked) {
               checkbox.checked = false;
-              checkbox.dispatchEvent(new Event("input", { bubbles: true }));
-              checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+              notify(checkbox);
             }
           }
           control.checked = true;
         } else {
           control.value = value;
         }
-        control.dispatchEvent(new Event("input", { bubbles: true }));
-        control.dispatchEvent(new Event("change", { bubbles: true }));
+        notify(control);
       }
       return ["Fields filled. Review all fields, complete any CAPTCHA, and submit yourself. The helper does not submit forms.", ...selection.warnings].join(" ");
     })()`,

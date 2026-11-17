@@ -58,10 +58,10 @@ test("does not fill anything if a field changes or the page is wrong", () => {
 function mappedFixture(id) {
   const { mapping } = FORMS[id];
   const controls = Object.fromEntries(mapping.fields.map(([field, label, , tag = "INPUT"]) => [
-    field, { tagName: tag, labels: [{ textContent: label, firstChild: { textContent: label } }], value: "", getClientRects: () => [1], dispatchEvent() {} },
+    field, { tagName: tag, placeholder: label, labels: [{ textContent: label, firstChild: { textContent: label } }], value: "", getClientRects: () => [1], dispatchEvent() {} },
   ]));
   controls[mapping.state[0]] = {
-    tagName: mapping.stateText ? "INPUT" : "SELECT", labels: [{ textContent: mapping.state[1], firstChild: { textContent: mapping.state[1] } }], value: "",
+    tagName: mapping.stateText ? "INPUT" : "SELECT", name: mapping.state[1], labels: [{ textContent: mapping.state[1], firstChild: { textContent: mapping.state[1] } }], value: "",
     options: [{
       value: mapping.stateCodeSuffix ? "38_NY" : mapping.fullStateName ? "New York" : "NY",
       textContent: "New York", closest: () => null,
@@ -78,11 +78,14 @@ function mappedFixture(id) {
       return control ? [control] : [];
     },
   };
-  globalThis.document = { querySelector: (selector) => selector === mapping.form ? form : null };
+  globalThis.document = {
+    querySelector: (selector) => selector === mapping.form ? form : null,
+    createEvent: () => ({ initEvent(type, bubbles) { this.type = type; this.bubbles = bubbles; } }),
+  };
   return { controls, mapping: { ...mapping, stateNames: CONTACT_STATES } };
 }
 
-for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "sanders", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren", "peters", "reed", "rosen", "shaheen", "merkley", "fetterman", "hickenlooper", "ossoff", "bluntrochester", "hassan"]) {
+for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "sanders", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren", "peters", "reed", "rosen", "shaheen", "merkley", "fetterman", "hickenlooper", "ossoff", "bluntrochester", "hassan", "cantwell", "kelly", "warner", "heinrich", "hirono", "bennet", "murray", "welch", "warnock", "blumenthal", "wyden", "whitehouse", "baldwin", "duckworth", "kaine", "smith"]) {
   test(`${id} fills expected fields including email confirmation`, () => {
     const { controls, mapping } = mappedFixture(id);
     assert.match(fillMappedForm(data, mapping), /does not submit/);
@@ -96,10 +99,12 @@ for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego
     const { controls, mapping } = mappedFixture(id);
     controls[mapping.fields.at(-1)[0]].labels[0].textContent = "Changed";
     controls[mapping.fields.at(-1)[0]].labels[0].firstChild.textContent = "Changed";
+    controls[mapping.fields.at(-1)[0]].placeholder = "Changed";
     assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
     assert.equal(controls[mapping.fields[0][0]].value, "");
     controls[mapping.fields.at(-1)[0]].labels[0].textContent = mapping.fields.at(-1)[1];
     controls[mapping.fields.at(-1)[0]].labels[0].firstChild.textContent = mapping.fields.at(-1)[1];
+    controls[mapping.fields.at(-1)[0]].placeholder = mapping.fields.at(-1)[1];
     if (mapping.stateText) controls[mapping.state[0]].readOnly = true;
     else controls[mapping.state[0]].options = [];
     assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
@@ -192,7 +197,7 @@ test("Klobuchar maps exported territory names to the form's abbreviations", () =
   assert.equal(controls[mapping.state[0]].value, "VI");
 });
 
-for (const id of ["padilla", "murphy"]) {
+for (const id of ["padilla", "murphy", "warnock"]) {
   test(`${id} requires its initial selection and visible fields`, () => {
     const { controls, mapping } = mappedFixture(id);
     controls[mapping.prerequisite[0]].value = "";
@@ -204,6 +209,43 @@ for (const id of ["padilla", "murphy"]) {
       assert.equal(controls[mapping.fields[0][0]].value, "");
     }
     controls[mapping.prerequisite[0]].value = mapping.prerequisite[2] || "Housing";
+    controls[mapping.fields[1][0]].getClientRects = () => [];
+    assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
+    assert.equal(controls[mapping.fields[0][0]].value, "");
+  });
+}
+
+test("Smith rejects a changed state name before filling", () => {
+  const { controls, mapping } = mappedFixture("smith");
+  controls[mapping.state[0]].name = "changed";
+  assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
+  assert.equal(controls[mapping.fields[0][0]].value, "");
+});
+
+test("Murray maps the District of Columbia option's capitalization", () => {
+  const { controls, mapping } = mappedFixture("murray");
+  controls[mapping.state[0]].options = [{ value: "District Of Columbia" }];
+  fillMappedForm({ ...data, contact: { ...data.contact, state: "DC" } }, mapping);
+  assert.equal(controls[mapping.state[0]].value, "District Of Columbia");
+});
+
+test("mapped forms dispatch bubbling events when the page overrides Event", () => {
+  const { controls, mapping } = mappedFixture("cantwell");
+  const events = [];
+  controls[mapping.fields[0][0]].dispatchEvent = (event) => events.push([event.type, event.bubbles]);
+  const original = globalThis.Event;
+  globalThis.Event = class { constructor() { throw new Error("Page override"); } };
+  try {
+    fillMappedForm(data, mapping);
+    assert.deepEqual(events, [["input", true], ["change", true]]);
+  } finally {
+    globalThis.Event = original;
+  }
+});
+
+for (const id of ["baldwin", "duckworth"]) {
+  test(`${id} does not fill hidden fields`, () => {
+    const { controls, mapping } = mappedFixture(id);
     controls[mapping.fields[1][0]].getClientRects = () => [];
     assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
     assert.equal(controls[mapping.fields[0][0]].value, "");

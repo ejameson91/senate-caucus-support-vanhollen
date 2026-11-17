@@ -43,13 +43,17 @@ export function fillMappedForm(data, mapping) {
   const find = (id, tag, label) => {
     const controls = form.querySelectorAll(`[${mapping.byName ? "name" : "id"}="${id}"]`);
     const control = controls.length === 1 ? controls[0] : null;
-    const actualLabel = mapping.byName
+    const actualLabel = id === mapping.state[0] && mapping.stateName
+      ? control?.name
+      : id !== mapping.state[0] && mapping.fieldPlaceholders
+      ? control?.placeholder
+      : mapping.byName
       ? control?.labels?.[0]?.firstChild?.textContent.trim()
       : control?.labels?.[0]?.textContent.trim();
-    if (!control || control.tagName !== tag || control.disabled || control.readOnly ||
-        (mapping.requireVisible && !control.getClientRects().length) ||
-        actualLabel !== label)
+    if (!control || control.tagName !== tag || control.disabled || control.readOnly || actualLabel !== label)
       throw new Error("The contact form has changed; no fields were filled. Complete it manually.");
+    if (mapping.requireVisible && !control.getClientRects().length)
+      throw new Error("Form fields are hidden; no fields were filled. Complete the initial steps on the senator's page and try again.");
     return control;
   };
   if (mapping.prerequisite) {
@@ -81,8 +85,11 @@ export function fillMappedForm(data, mapping) {
     throw new Error("A value exceeds this form's length limit; no fields were filled. Shorten it and try again.");
   for (const [control, value] of controls) {
     control.value = value;
-    control.dispatchEvent(new Event("input", { bubbles: true }));
-    control.dispatchEvent(new Event("change", { bubbles: true }));
+    for (const type of ["input", "change"]) {
+      const event = document.createEvent("Event");
+      event.initEvent(type, true, false);
+      control.dispatchEvent(event);
+    }
   }
   return "Fields filled. Review them, select any required title and topic, complete any CAPTCHA, and submit yourself. The helper does not submit forms.";
 }
