@@ -14,7 +14,7 @@ let contactData;
 
 function getForm(id) {
   if (typeof id !== "string" || !Object.hasOwn(FORMS, id))
-    throw new Error("Select a supported senator.");
+    throw new Error("Select a supported senator or representative.");
   return FORMS[id];
 }
 
@@ -71,7 +71,7 @@ ipcMain.handle("open-form", async (event, id) => {
   const formWindow = new BrowserWindow({
     width: 1100,
     height: 800,
-    title: `Senator ${form.name} contact form`,
+    title: `${form.chamber === "house" ? "Representative" : "Senator"} ${form.name} contact form`,
     webPreferences: { session: formSession, contextIsolation: true, sandbox: true, nodeIntegration: false },
   });
   formWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
@@ -122,7 +122,7 @@ ipcMain.handle("fill-form", async (event, id, topicValue) => {
     `(() => {
       const data = ${JSON.stringify(contactData)};
       const selection = (${prepareSelections.toString()})(${JSON.stringify(form.selects)}, data.contact.prefix, ${JSON.stringify(topic)});
-      (${form.fill.toString()})(data, ${JSON.stringify({ ...form.mapping, stateNames: CONTACT_STATES })});
+      const fillMessage = (${form.fill.toString()})(data, ${JSON.stringify({ ...form.mapping, stateNames: CONTACT_STATES })});
       for (const [control, value, checkboxes] of selection.selected) {
         if (checkboxes) {
           for (const checkbox of checkboxes) {
@@ -139,7 +139,7 @@ ipcMain.handle("fill-form", async (event, id, topicValue) => {
         control.dispatchEvent(new Event("input", { bubbles: true }));
         control.dispatchEvent(new Event("change", { bubbles: true }));
       }
-      return ["Fields filled. Review all fields, complete any CAPTCHA, and submit yourself. The helper does not submit forms.", ...selection.warnings].join(" ");
+      return [fillMessage, ...selection.warnings].join(" ");
     })()`,
   );
   formWindow.focus();

@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Contact the Senate Democratic caucus</title>
+    <title>Contact the Senate and House about leadership</title>
     <meta
       name="description"
-      content="Prepare a message and find senators' contact information."
+      content="Prepare leadership messages and find senators' and representatives' contact information."
     />
     <link rel="stylesheet" href="./styles.css" />
     <script type="module" src="./app.js"></script>
@@ -15,9 +15,10 @@
     <main>
       <header class="hero">
         <p class="eyebrow">Make your voice heard</p>
-        <h1>Contact the Senate Democratic caucus</h1>
+        <h1>Contact Congress about leadership</h1>
         <p class="intro">
-          Ask senators to support Chris Van Hollen for Senate Democratic leader.
+          Ask senators to support Chris Van Hollen for Senate Democratic leader
+          and House representatives not to support Hakeem Jeffries for Speaker.
         </p>
         <p>
           The Democratic leader would be majority leader if the party holds the
@@ -67,13 +68,16 @@
       <section aria-labelledby="automation-title">
         <h2 id="automation-title">Optional local form helper</h2>
         <p>
-          Export your contact details and current message for the optional desktop
-          helper. It supports the contact forms for Senators Gillibrand, King,
+          Export your contact details and choose either the Senate or House
+          message for the optional desktop helper. It supports the contact forms for Senators Gillibrand, King,
           Cortez Masto, Padilla, Murphy, Schatz, Gallego, Schiff, Klobuchar, Kim,
           Alsobrooks, Luján, Sanders, Schumer, Van Hollen, Coons, Booker,
           Markey, Slotkin, Warren, Peters, Reed, Rosen, Shaheen, Merkley,
           Fetterman, Hickenlooper, Ossoff, Blunt Rochester, and Hassan
           (the ten newest forms require desktop version 1.1.0 or later).
+          The current source also maps Representative Pete Aguilar; other House
+          forms are not yet supported for autofill. Use official contact pages
+          and fill them manually.
           You must review and submit the form yourself.
         </p>
         <p>
@@ -85,6 +89,11 @@
           (available after a release is published; unsigned apps may show warnings).
         </p>
         <form id="export-form">
+          <label for="export-campaign">Message to include in export</label>
+          <select id="export-campaign">
+            <option value="senate">Senate message</option>
+            <option value="house">House message</option>
+          </select>
           <label for="export-prefix">Prefix <span>(optional)</span></label>
           <select id="export-prefix" autocomplete="honorific-prefix">
             <option value="">No prefix</option>
@@ -146,9 +155,43 @@
         <ul id="caucus-list" class="senator-list"></ul>
       </section>
 
+      <section aria-labelledby="house-title">
+        <p class="step">04 / YOUR HOUSE MESSAGE</p>
+        <h2 id="house-title">Ask representatives not to support Hakeem Jeffries for Speaker</h2>
+        <p>
+          Generate an editable message, then choose a state to view current
+          Democratic House members and their districts. Select your district
+          yourself; this app does not infer a representative from your address.
+          Office pages may require district authentication.
+        </p>
+        <form id="house-draft-form">
+          <label for="house-sender-name">Your name <span>(optional)</span></label>
+          <input id="house-sender-name" autocomplete="name" />
+          <label for="house-reason">Why does this matter to you? <span>(optional)</span></label>
+          <textarea id="house-reason" rows="3" placeholder="Share your own perspective"></textarea>
+          <button type="submit">Generate House message</button>
+        </form>
+        <div class="draft">
+          <label for="house-subject">Subject</label>
+          <input id="house-subject" value="Do not vote for Hakeem Jeffries for Speaker" />
+          <button type="button" id="copy-house-subject" class="secondary">Copy subject</button>
+          <label for="house-body">Message</label>
+          <textarea id="house-body" rows="8"></textarea>
+          <button type="button" id="copy-house-body" class="secondary">Copy message</button>
+          <p id="house-copy-status" role="status" aria-live="polite"></p>
+        </div>
+        <h3>Find a Democratic House member</h3>
+        <label for="house-state">State or territory</label>
+        <select id="house-state" disabled>
+          <option value="">Select a state or territory</option>
+        </select>
+        <p id="house-data-status" role="status" aria-live="polite">Loading current representative information…</p>
+        <div id="house-results" aria-live="polite"></div>
+      </section>
+
       <footer>
         <p>
-          Senator information comes from
+          Senator and representative information comes from
           <a href="https://github.com/unitedstates/congress-legislators"
             >congress-legislators</a
           >. Contact links can change; confirm details on the senator’s official
@@ -162,6 +205,11 @@
           <a href="https://www.senate.gov/senators/senators-contact.htm"
             >Official Senate contact guidance</a
           >
+        </p>
+        <p>
+          House member and district information comes from
+          <a href="https://github.com/unitedstates/congress-legislators">congress-legislators</a>.
+          Confirm membership and contact information on each representative’s official House.gov website.
         </p>
       </footer>
     </main>
