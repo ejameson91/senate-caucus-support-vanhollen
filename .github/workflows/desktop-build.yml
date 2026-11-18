@@ -1,4 +1,4 @@
-name: Build desktop helper
+name: Build congressional form helpers
 
 on:
   workflow_dispatch:
@@ -29,15 +29,20 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run dist -- ${{ matrix.arguments }} --publish never
+      - run: npm run dist:senate -- ${{ matrix.arguments }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - run: npm run dist:house -- ${{ matrix.arguments }} --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
       - uses: actions/upload-artifact@v4
         with:
-          name: senate-form-helper-${{ matrix.platform }}
+          name: congressional-form-helpers-${{ matrix.platform }}
           path: |
-            dist/*.zip
-            dist/*.exe
+            dist/senate/*.zip
+            dist/senate/*.exe
+            dist/house/*.zip
+            dist/house/*.exe
           if-no-files-found: error
 
   release:

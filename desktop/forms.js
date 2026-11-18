@@ -885,6 +885,14 @@ export const FORMS = {
   },
 };
 
+export function formsForChamber(chamber) {
+  if (!["senate", "house"].includes(chamber))
+    throw new Error("Choose a supported chamber.");
+  return Object.fromEntries(
+    Object.entries(FORMS).filter(([, form]) => (form.chamber || "senate") === chamber),
+  );
+}
+
 export function isFormUrl(value, expected) {
   try {
     const url = new URL(value);

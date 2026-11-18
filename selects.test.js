@@ -10,12 +10,21 @@ test("office picker is ordered by surname without changing its default", () => {
   assert.ok(picker);
   const options = [...picker[1].matchAll(/<option value="([^"]+)"( selected)?>([^<]+)<\/option>/g)];
   assert.deepEqual(options.map((option) => option[1]), [
-    "aguilar", "alsobrooks", "bluntrochester", "booker", "coons", "cortezmasto", "fetterman", "gallego", "gillibrand",
+    "alsobrooks", "bluntrochester", "booker", "coons", "cortezmasto", "fetterman", "gallego", "gillibrand",
     "hassan", "hickenlooper", "kim", "king", "klobuchar", "lujan", "markey", "merkley", "murphy", "ossoff",
     "padilla", "peters", "reed", "rosen", "sanders", "schatz", "schiff", "schumer", "shaheen", "slotkin", "vanhollen", "warren",
   ]);
   for (const [, id, , name] of options) assert.equal(name, FORMS[id].pickerLabel || FORMS[id].name);
   assert.deepEqual(options.filter((option) => option[2]).map((option) => option[1]), ["gillibrand"]);
+
+  const houseHtml = readFileSync(new URL("./desktop/house.html", import.meta.url), "utf8");
+  const housePicker = houseHtml.match(/<select id="senator">([\s\S]*?)<\/select>/);
+  assert.ok(housePicker);
+  assert.deepEqual(
+    [...housePicker[1].matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)]
+      .map((option) => [option[1], option[2]]),
+    [["aguilar", "Pete Aguilar"]],
+  );
 });
 
 function fixture(id) {

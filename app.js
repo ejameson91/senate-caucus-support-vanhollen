@@ -56,6 +56,7 @@ $("#export-form").addEventListener("submit", (event) => {
     const campaign = $("#export-campaign").value;
     const data = validateExport({
       version: 1,
+      campaign,
       contact: {
         prefix: $("#export-prefix").value,
         firstName: $("#export-first-name").value,

@@ -27,6 +27,8 @@ export const CONTACT_FIELDS = [
 export function validateExport(value) {
   if (!value || typeof value !== "object" || Array.isArray(value) || value.version !== 1)
     throw new Error("This is not a supported contact export.");
+  if (Object.hasOwn(value, "campaign") && !["senate", "house"].includes(value.campaign))
+    throw new Error("Choose a valid campaign.");
   if (!value.contact || typeof value.contact !== "object" || Array.isArray(value.contact))
     throw new Error("The contact details are missing.");
   const contact = {};
@@ -50,7 +52,19 @@ export function validateExport(value) {
   if (typeof value.message !== "string" || !value.message.trim() || value.message.length > 20000)
     throw new Error("A message of at most 20,000 characters is required.");
   const result = { version: 1, contact, subject: value.subject.trim(), message: value.message.trim() };
+  if (Object.hasOwn(value, "campaign")) result.campaign = value.campaign;
   if (new TextEncoder().encode(JSON.stringify(result, null, 2)).length > 65536)
     throw new Error("The contact export exceeds the 64 KB limit.");
   return result;
+}
+
+export function validateExportForCampaign(value, expectedCampaign) {
+  if (!["senate", "house"].includes(expectedCampaign))
+    throw new Error("Choose a valid campaign.");
+  const data = validateExport(value);
+  if (data.campaign && data.campaign !== expectedCampaign) {
+    const campaignName = data.campaign[0].toUpperCase() + data.campaign.slice(1);
+    throw new Error(`This is a ${campaignName} export. Import it in the ${campaignName} Form Helper.`);
+  }
+  return { data, campaignVerified: data.campaign === expectedCampaign };
 }

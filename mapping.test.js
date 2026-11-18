@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { fillGillibrand, fillMappedForm } from "./desktop/mapping.js";
-import { FORMS, isFormUrl } from "./desktop/forms.js";
+import { FORMS, formsForChamber, isFormUrl } from "./desktop/forms.js";
 import { CONTACT_STATES } from "./export-data.js";
 
 const fields = [
@@ -37,6 +37,15 @@ function fixture() {
   globalThis.location = { origin: "https://www.gillibrand.senate.gov", pathname: "/contact/email-me/" };
   return controls;
 }
+
+test("provides separate, non-overlapping form registries for each helper", () => {
+  const senate = formsForChamber("senate");
+  const house = formsForChamber("house");
+  assert.equal(Object.hasOwn(senate, "aguilar"), false);
+  assert.deepEqual(Object.keys(house), ["aguilar"]);
+  assert.equal(Object.keys(senate).length + Object.keys(house).length, Object.keys(FORMS).length);
+  assert.throws(() => formsForChamber("other"), /supported chamber/);
+});
 
 test("fills only the expected fields on the supported form", () => {
   const controls = fixture();
