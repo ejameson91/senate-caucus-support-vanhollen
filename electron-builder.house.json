@@ -1,0 +1,23 @@
+{
+  "appId": "org.senatecaucus.houseformhelper",
+  "productName": "House Form Helper",
+  "directories": {
+    "output": "dist/house"
+  },
+  "extraMetadata": {
+    "main": "desktop/house-main.js"
+  },
+  "files": [
+    "desktop/**",
+    "export-data.js",
+    "senators.js",
+    "package.json"
+  ],
+  "mac": {
+    "target": ["zip"],
+    "identity": null
+  },
+  "win": {
+    "target": ["portable"]
+  }
+}

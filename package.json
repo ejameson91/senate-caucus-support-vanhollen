@@ -11,28 +11,11 @@
   "scripts": {
     "test": "node --test *.test.js",
     "desktop": "electron .",
-    "dist": "electron-builder"
-  },
-  "build": {
-    "appId": "org.senatecaucus.formhelper",
-    "productName": "Senate Form Helper",
-    "files": [
-      "desktop/**",
-      "export-data.js",
-      "senators.js",
-      "package.json"
-    ],
-    "mac": {
-      "target": [
-        "zip"
-      ],
-      "identity": null
-    },
-    "win": {
-      "target": [
-        "portable"
-      ]
-    }
+    "desktop:senate": "electron desktop/senate-main.js",
+    "desktop:house": "electron desktop/house-main.js",
+    "dist": "electron-builder --config electron-builder.senate.json",
+    "dist:senate": "electron-builder --config electron-builder.senate.json",
+    "dist:house": "electron-builder --config electron-builder.house.json"
   },
   "devDependencies": {
     "electron": "^45.3.2",

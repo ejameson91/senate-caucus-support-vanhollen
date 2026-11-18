@@ -1,6 +1,44 @@
 import { fillGillibrand, fillMappedForm } from "./mapping.js";
 
 export const FORMS = {
+  aguilar: {
+    name: "Pete Aguilar",
+    pickerLabel: "Pete Aguilar (House)",
+    chamber: "house",
+    url: "https://aguilar.house.gov/email-me/",
+    fill: fillMappedForm,
+    selects: {
+      form: 'form:has([name="_wpcf7"][value="1093"])',
+      prefix: ["prefix", "Prefix"],
+      prefixText: true,
+      topic: ["issue", "Please choose the issue of concern*"],
+    },
+    mapping: {
+      form: 'form:has([name="_wpcf7"][value="1093"])',
+      enforceLength: true,
+      manualInstructions: "Choose whether you want a response yourself. The helper leaves the newsletter and speech options unchanged.",
+      fields: [
+        ["first-name", "First Name*", "firstName"],
+        ["last-name", "Last Name*", "lastName"],
+        ["address", "Street Address*", "address"],
+        ["address2", "Street Address Continued", "address2"],
+        ["city", "City*", "city"],
+        ["zip5", "Zip Code*", "zip"],
+        ["email", "Email*", "email"],
+        ["phone", "Telephone Number*", "phone"],
+        ["subject", "Message Subject*", "subject"],
+        ["message", "Text Of Message*", "message", "TEXTAREA"],
+      ],
+      state: ["state", "State*"],
+      stateValues: {
+        "American Samoa": "AS",
+        Guam: "GU",
+        "Northern Marianas Islands": "MP",
+        "Puerto Rico": "PR",
+        "U.S. Virgin Islands": "VI",
+      },
+    },
+  },
   gillibrand: {
     name: "Kirsten Gillibrand",
     url: "https://www.gillibrand.senate.gov/contact/email-me/",
@@ -846,6 +884,14 @@ export const FORMS = {
     },
   },
 };
+
+export function formsForChamber(chamber) {
+  if (!["senate", "house"].includes(chamber))
+    throw new Error("Choose a supported chamber.");
+  return Object.fromEntries(
+    Object.entries(FORMS).filter(([, form]) => (form.chamber || "senate") === chamber),
+  );
+}
 
 export function isFormUrl(value, expected) {
   try {

@@ -14,7 +14,7 @@ senator.addEventListener("change", () => {
   fill.disabled = true;
   loadTopics.disabled = true;
   resetTopics();
-  status.textContent = "Open the selected senator's form.";
+  status.textContent = "Open the selected office's form.";
 });
 
 document.querySelector("#import").addEventListener("click", async () => {
@@ -25,7 +25,9 @@ document.querySelector("#import").addEventListener("click", async () => {
     fill.disabled = true;
     loadTopics.disabled = true;
     resetTopics();
-    status.textContent = "Export imported. Open the supported form.";
+    status.textContent = result.campaignVerified
+      ? "Matching campaign export imported. Open the supported form."
+      : "Legacy export has no campaign label. Confirm it contains the correct message before continuing.";
   } catch (error) {
     open.disabled = true;
     fill.disabled = true;

@@ -2,11 +2,14 @@ import { app, BrowserWindow, dialog, ipcMain, session } from "electron";
 import { readFile, stat } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { CONTACT_STATES, validateExport } from "../export-data.js";
-import { FORMS, isFormUrl } from "./forms.js";
+import { CONTACT_STATES, validateExportForCampaign } from "../export-data.js";
+import { formsForChamber, isFormUrl } from "./forms.js";
 import { prepareSelections, readTopics } from "./selects.js";
 
 const directory = dirname(fileURLToPath(import.meta.url));
+const chamber = process.env.FORM_HELPER_CHAMBER || "senate";
+const appName = chamber === "house" ? "House Form Helper" : "Senate Form Helper";
+const FORMS = formsForChamber(chamber);
 let mainWindow;
 const formWindows = new Map();
 const topicsByForm = new Map();
@@ -14,7 +17,7 @@ let contactData;
 
 function getForm(id) {
   if (typeof id !== "string" || !Object.hasOwn(FORMS, id))
-    throw new Error("Select a supported senator.");
+    throw new Error(`Select a supported ${chamber === "house" ? "representative" : "senator"}.`);
   return FORMS[id];
 }
 
@@ -27,6 +30,7 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 720,
     height: 680,
+    title: appName,
     webPreferences: {
       preload: join(directory, "preload.cjs"),
       contextIsolation: true,
@@ -36,7 +40,7 @@ async function createWindow() {
   });
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   mainWindow.webContents.on("will-navigate", (event) => event.preventDefault());
-  await mainWindow.loadFile(join(directory, "index.html"));
+  await mainWindow.loadFile(join(directory, chamber === "house" ? "house.html" : "index.html"));
 }
 
 ipcMain.handle("import-export", async (event) => {
@@ -50,8 +54,12 @@ ipcMain.handle("import-export", async (event) => {
   try {
     const path = result.filePaths[0];
     if ((await stat(path)).size > 65536) throw new Error("The file is larger than 64 KB.");
-    contactData = validateExport(JSON.parse(await readFile(path, "utf8")));
-    return { imported: true };
+    const result = validateExportForCampaign(
+      JSON.parse(await readFile(path, "utf8")),
+      chamber,
+    );
+    contactData = result.data;
+    return { imported: true, campaignVerified: result.campaignVerified };
   } catch (error) {
     throw new Error(`Could not import the export: ${error.message}`);
   }
@@ -71,7 +79,7 @@ ipcMain.handle("open-form", async (event, id) => {
   const formWindow = new BrowserWindow({
     width: 1100,
     height: 800,
-    title: `Senator ${form.name} contact form`,
+    title: `${form.chamber === "house" ? "Representative" : "Senator"} ${form.name} contact form`,
     webPreferences: { session: formSession, contextIsolation: true, sandbox: true, nodeIntegration: false },
   });
   formWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
@@ -122,7 +130,7 @@ ipcMain.handle("fill-form", async (event, id, topicValue) => {
     `(() => {
       const data = ${JSON.stringify(contactData)};
       const selection = (${prepareSelections.toString()})(${JSON.stringify(form.selects)}, data.contact.prefix, ${JSON.stringify(topic)});
-      (${form.fill.toString()})(data, ${JSON.stringify({ ...form.mapping, stateNames: CONTACT_STATES })});
+      const fillMessage = (${form.fill.toString()})(data, ${JSON.stringify({ ...form.mapping, stateNames: CONTACT_STATES })});
       for (const [control, value, checkboxes] of selection.selected) {
         if (checkboxes) {
           for (const checkbox of checkboxes) {
@@ -139,7 +147,7 @@ ipcMain.handle("fill-form", async (event, id, topicValue) => {
         control.dispatchEvent(new Event("input", { bubbles: true }));
         control.dispatchEvent(new Event("change", { bubbles: true }));
       }
-      return ["Fields filled. Review all fields, complete any CAPTCHA, and submit yourself. The helper does not submit forms.", ...selection.warnings].join(" ");
+      return [fillMessage, ...selection.warnings].join(" ");
     })()`,
   );
   formWindow.focus();

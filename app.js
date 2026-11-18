@@ -5,6 +5,12 @@ import {
   draftMessage,
   getSenators,
 } from "./senators.js";
+import {
+  draftHouseMessage,
+  getRepresentatives,
+  houseMembers,
+  HOUSE_JURISDICTIONS,
+} from "./representatives.js";
 import { CONTACT_STATES, PREFIXES, validateExport } from "./export-data.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -12,7 +18,11 @@ const stateSelect = $("#state");
 const stateResults = $("#state-results");
 const caucusList = $("#caucus-list");
 const dataStatus = $("#data-status");
+const houseStateSelect = $("#house-state");
+const houseResults = $("#house-results");
+const houseDataStatus = $("#house-data-status");
 let senators = null;
+let representatives = null;
 
 stateSelect.disabled = true;
 for (const [state, name] of Object.entries(STATES)) {
@@ -20,6 +30,12 @@ for (const [state, name] of Object.entries(STATES)) {
   option.value = state;
   option.textContent = name;
   stateSelect.append(option);
+}
+for (const [state, name] of Object.entries(HOUSE_JURISDICTIONS).sort((a, b) => a[1].localeCompare(b[1]))) {
+  const option = document.createElement("option");
+  option.value = state;
+  option.textContent = name;
+  houseStateSelect.append(option);
 }
 for (const [state, name] of Object.entries(CONTACT_STATES)) {
   const option = document.createElement("option");
@@ -37,8 +53,10 @@ for (const prefix of PREFIXES) {
 $("#export-form").addEventListener("submit", (event) => {
   event.preventDefault();
   try {
+    const campaign = $("#export-campaign").value;
     const data = validateExport({
       version: 1,
+      campaign,
       contact: {
         prefix: $("#export-prefix").value,
         firstName: $("#export-first-name").value,
@@ -51,13 +69,13 @@ $("#export-form").addEventListener("submit", (event) => {
         email: $("#export-email").value,
         phone: $("#export-phone").value,
       },
-      subject: $("#subject").value,
-      message: $("#body").value,
+      subject: campaign === "house" ? $("#house-subject").value : $("#subject").value,
+      message: campaign === "house" ? $("#house-body").value : $("#body").value,
     });
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = "senate-contact-export.json";
+    link.download = `${campaign}-contact-export.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     $("#export-status").textContent = "Export downloaded. Keep it private and delete it when finished.";
@@ -122,7 +140,53 @@ function showState() {
   }
 }
 
+function houseCard(representative) {
+  const item = document.createElement("li");
+  const title = document.createElement("h3");
+  title.textContent = representative.name;
+  item.append(title);
+  const details = document.createElement("p");
+  const district = representative.district === 0 ? "At-large district" : `District ${representative.district}`;
+  details.textContent = `${HOUSE_JURISDICTIONS[representative.state]} · ${district} · Democrat`;
+  item.append(details);
+  const links = document.createElement("div");
+  links.className = "card-links";
+  const url = representative.contact || representative.website;
+  if (url) {
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = representative.contact ? "Open official contact page" : "Visit official House website";
+    links.append(link);
+  } else {
+    const unavailable = document.createElement("span");
+    unavailable.textContent = "Official link unavailable";
+    links.append(unavailable);
+  }
+  item.append(links);
+  return item;
+}
+
+function showHouseMembers() {
+  houseResults.replaceChildren();
+  if (!houseStateSelect.value || !representatives) return;
+  const matches = houseMembers(
+    representatives.filter((representative) => representative.state === houseStateSelect.value),
+  );
+  if (!matches.length) {
+    houseResults.textContent =
+      "No current Democratic House member is listed for this state or territory. Check the official House directory.";
+    return;
+  }
+  const list = document.createElement("ul");
+  list.className = "senator-list";
+  for (const representative of matches) list.append(houseCard(representative));
+  houseResults.append(list);
+}
+
 stateSelect.addEventListener("change", showState);
+houseStateSelect.addEventListener("change", showHouseMembers);
 $("#draft-form").addEventListener("submit", (event) => {
   event.preventDefault();
   $("#body").value = draftMessage($("#sender-name").value, $("#reason").value);
@@ -130,19 +194,27 @@ $("#draft-form").addEventListener("submit", (event) => {
     "Draft generated. Review and edit it before copying.";
 });
 $("#body").value = draftMessage("", "");
+$("#house-body").value = draftHouseMessage("", "");
+$("#house-draft-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  $("#house-body").value = draftHouseMessage($("#house-sender-name").value, $("#house-reason").value);
+  $("#house-copy-status").textContent = "Draft generated. Review and edit it before copying.";
+});
 
-for (const [button, field, label] of [
-  ["#copy-subject", "#subject", "Subject"],
-  ["#copy-body", "#body", "Message"],
+for (const [button, field, label, status] of [
+  ["#copy-subject", "#subject", "Subject", "#copy-status"],
+  ["#copy-body", "#body", "Message", "#copy-status"],
+  ["#copy-house-subject", "#house-subject", "Subject", "#house-copy-status"],
+  ["#copy-house-body", "#house-body", "Message", "#house-copy-status"],
 ]) {
   $(button).addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText($(field).value);
-      $("#copy-status").textContent = `${label} copied.`;
+      $(status).textContent = `${label} copied.`;
     } catch {
       $(field).focus();
       $(field).select();
-      $("#copy-status").textContent =
+      $(status).textContent =
         `Could not copy ${label.toLowerCase()} automatically. The text is selected; copy it manually.`;
     }
   });
@@ -152,7 +224,8 @@ try {
   const response = await fetch(DATA_URL);
   if (!response.ok)
     throw new Error(`Data source returned HTTP ${response.status}.`);
-  senators = getSenators(await response.json());
+  const memberData = await response.json();
+  senators = getSenators(memberData);
   const caucus = caucusMembers(senators);
   if (!caucus.length)
     throw new Error("No Democratic caucus members were found in the data.");
@@ -160,10 +233,22 @@ try {
   dataStatus.textContent = `${caucus.length} current senators listed, including independents identified as caucusing with Democrats.`;
   stateSelect.disabled = false;
   showState();
+  representatives = houseMembers(getRepresentatives(memberData));
+  if (representatives.length) {
+    houseDataStatus.textContent = `${representatives.length} current Democratic House members listed by state and district. Select your district yourself.`;
+    houseStateSelect.disabled = false;
+    showHouseMembers();
+  } else {
+    houseDataStatus.textContent = "No current Democratic House members were found in the data.";
+    houseStateSelect.disabled = true;
+  }
 } catch (error) {
-  console.error("Could not load senator information:", error);
+  console.error("Could not load congressional member information:", error);
   dataStatus.textContent =
     "Could not load senator information. Please try again later or use the official Senate directory below.";
   stateResults.textContent =
     "Senator lookup is unavailable until the data can be loaded.";
+  houseDataStatus.textContent =
+    "Representative lookup is unavailable until the data can be loaded.";
+  houseStateSelect.disabled = true;
 }

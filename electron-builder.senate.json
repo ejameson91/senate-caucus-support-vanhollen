@@ -1,0 +1,23 @@
+{
+  "appId": "org.senatecaucus.formhelper",
+  "productName": "Senate Form Helper",
+  "directories": {
+    "output": "dist/senate"
+  },
+  "extraMetadata": {
+    "main": "desktop/senate-main.js"
+  },
+  "files": [
+    "desktop/**",
+    "export-data.js",
+    "senators.js",
+    "package.json"
+  ],
+  "mac": {
+    "target": ["zip"],
+    "identity": null
+  },
+  "win": {
+    "target": ["portable"]
+  }
+}

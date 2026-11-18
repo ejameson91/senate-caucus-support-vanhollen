@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { FORMS } from "./desktop/forms.js";
 import { prepareSelections, readTopics } from "./desktop/selects.js";
 
-test("senator picker is ordered by surname without changing its default", () => {
+test("office picker is ordered by surname without changing its default", () => {
   const html = readFileSync(new URL("./desktop/index.html", import.meta.url), "utf8");
   const picker = html.match(/<select id="senator">([\s\S]*?)<\/select>/);
   assert.ok(picker);
@@ -14,8 +14,17 @@ test("senator picker is ordered by surname without changing its default", () => 
     "hassan", "hickenlooper", "kim", "king", "klobuchar", "lujan", "markey", "merkley", "murphy", "ossoff",
     "padilla", "peters", "reed", "rosen", "sanders", "schatz", "schiff", "schumer", "shaheen", "slotkin", "vanhollen", "warren",
   ]);
-  for (const [, id, , name] of options) assert.equal(name, FORMS[id].name);
+  for (const [, id, , name] of options) assert.equal(name, FORMS[id].pickerLabel || FORMS[id].name);
   assert.deepEqual(options.filter((option) => option[2]).map((option) => option[1]), ["gillibrand"]);
+
+  const houseHtml = readFileSync(new URL("./desktop/house.html", import.meta.url), "utf8");
+  const housePicker = houseHtml.match(/<select id="senator">([\s\S]*?)<\/select>/);
+  assert.ok(housePicker);
+  assert.deepEqual(
+    [...housePicker[1].matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)]
+      .map((option) => [option[1], option[2]]),
+    [["aguilar", "Pete Aguilar"]],
+  );
 });
 
 function fixture(id) {
@@ -45,7 +54,7 @@ function fixture(id) {
   return { config, form, topic, prefix };
 }
 
-for (const id of ["gillibrand", "king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren", "peters", "reed", "rosen", "shaheen", "merkley", "fetterman", "hickenlooper", "ossoff", "bluntrochester", "hassan"]) {
+for (const id of ["aguilar", "gillibrand", "king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren", "peters", "reed", "rosen", "shaheen", "merkley", "fetterman", "hickenlooper", "ossoff", "bluntrochester", "hassan"]) {
   test(`${id} loads selectable topics and prepares the chosen topic`, () => {
     const { config, topic } = fixture(id);
     if (config.requireCurrentTopic) topic.value = "GOV";

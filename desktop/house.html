@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'" />
+    <title>House Form Helper</title>
+    <link rel="stylesheet" href="style.css" />
+    <script defer src="renderer.js"></script>
+  </head>
+  <body>
+    <main>
+      <h1>House Form Helper</h1>
+      <p>Imports the House contact export from the website. Your details stay in memory while this app is open. The export file remains on disk until you delete it.</p>
+      <p>The helper currently supports Representative Pete Aguilar. Other House forms are not yet supported for autofill. Offices may limit responses to constituents.</p>
+      <ol>
+        <li><button id="import">Import House export</button></li>
+        <li>
+          <label for="senator">Choose a representative</label>
+          <select id="senator">
+            <option value="aguilar">Pete Aguilar</option>
+          </select>
+          <button id="open" disabled>Open form</button>
+        </li>
+        <li>
+          <button id="load-topics" disabled>Load topics from form</button>
+          <label for="topic">Topic <span>(optional; otherwise choose on the form)</span></label>
+          <select id="topic" disabled>
+            <option value="">Choose on form</option>
+          </select>
+        </li>
+        <li><button id="fill" disabled>Fill form</button></li>
+      </ol>
+      <p>Manually answer the required response question. The helper does not change the newsletter or speech options. Review all fields, complete any CAPTCHA, and submit yourself. The helper never submits forms.</p>
+      <p id="status" role="status" aria-live="polite">Import a House export to begin.</p>
+    </main>
+  </body>
+</html>

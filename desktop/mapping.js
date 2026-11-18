@@ -84,5 +84,5 @@ export function fillMappedForm(data, mapping) {
     control.dispatchEvent(new Event("input", { bubbles: true }));
     control.dispatchEvent(new Event("change", { bubbles: true }));
   }
-  return "Fields filled. Review them, select any required title and topic, complete any CAPTCHA, and submit yourself. The helper does not submit forms.";
+  return `Fields filled. Review them, select any required title and topic, complete any CAPTCHA, and submit yourself. The helper does not submit forms.${mapping.manualInstructions ? ` ${mapping.manualInstructions}` : ""}`;
 }

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { fillGillibrand, fillMappedForm } from "./desktop/mapping.js";
-import { FORMS, isFormUrl } from "./desktop/forms.js";
+import { FORMS, formsForChamber, isFormUrl } from "./desktop/forms.js";
 import { CONTACT_STATES } from "./export-data.js";
 
 const fields = [
@@ -37,6 +37,15 @@ function fixture() {
   globalThis.location = { origin: "https://www.gillibrand.senate.gov", pathname: "/contact/email-me/" };
   return controls;
 }
+
+test("provides separate, non-overlapping form registries for each helper", () => {
+  const senate = formsForChamber("senate");
+  const house = formsForChamber("house");
+  assert.equal(Object.hasOwn(senate, "aguilar"), false);
+  assert.deepEqual(Object.keys(house), ["aguilar"]);
+  assert.equal(Object.keys(senate).length + Object.keys(house).length, Object.keys(FORMS).length);
+  assert.throws(() => formsForChamber("other"), /supported chamber/);
+});
 
 test("fills only the expected fields on the supported form", () => {
   const controls = fixture();
@@ -82,7 +91,7 @@ function mappedFixture(id) {
   return { controls, mapping: { ...mapping, stateNames: CONTACT_STATES } };
 }
 
-for (const id of ["king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "sanders", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren", "peters", "reed", "rosen", "shaheen", "merkley", "fetterman", "hickenlooper", "ossoff", "bluntrochester", "hassan"]) {
+for (const id of ["aguilar", "king", "cortezmasto", "padilla", "murphy", "schatz", "gallego", "schiff", "klobuchar", "kim", "alsobrooks", "lujan", "sanders", "schumer", "vanhollen", "coons", "booker", "markey", "slotkin", "warren", "peters", "reed", "rosen", "shaheen", "merkley", "fetterman", "hickenlooper", "ossoff", "bluntrochester", "hassan"]) {
   test(`${id} fills expected fields including email confirmation`, () => {
     const { controls, mapping } = mappedFixture(id);
     assert.match(fillMappedForm(data, mapping), /does not submit/);
@@ -115,6 +124,12 @@ test("Merkley fills a validated text state with its full name", () => {
   controls[mapping.state[0]].labels[0].textContent = "Changed";
   assert.throws(() => fillMappedForm(data, mapping), /no fields were filled/);
   assert.equal(controls[mapping.fields[0][0]].value, "");
+});
+
+test("Aguilar mapping tells users which form choices remain manual", () => {
+  const { mapping } = mappedFixture("aguilar");
+  assert.match(fillMappedForm(data, mapping), /Choose whether you want a response yourself/);
+  assert.match(fillMappedForm(data, mapping), /does not submit/);
 });
 
 test("Ossoff combines address lines and maps territory codes", () => {
@@ -223,6 +238,8 @@ test("only the exact configured form origin and path are accepted", () => {
   assert.equal(isFormUrl("https://www.king.senate.gov.evil.example/contact", url), false);
   assert.equal(isFormUrl("https://www.king.senate.gov/other", url), false);
   assert.equal(isFormUrl("not a url", url), false);
+  assert.equal(isFormUrl(FORMS.aguilar.url, FORMS.aguilar.url), true);
+  assert.equal(isFormUrl("https://aguilar.house.gov/other", FORMS.aguilar.url), false);
 });
 
 test("Slotkin's shared outreach URL requires the exact form query", () => {

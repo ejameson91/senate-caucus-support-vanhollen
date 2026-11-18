@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validateExport } from "./export-data.js";
+import { validateExport, validateExportForCampaign } from "./export-data.js";
 
-const sample = () => ({
+const sample = (campaign = "senate") => ({
   version: 1,
+  campaign,
   contact: {
     firstName: " Test ", lastName: " Example ", address: "123 Example St",
     address2: "", city: "Example", state: "NY", zip: "10001",
@@ -18,7 +19,8 @@ test("validates and normalizes a contact export", () => {
   assert.equal(data.contact.prefix, "");
   assert.equal(data.subject, "Subject");
   assert.equal(data.message, "Message");
-  assert.deepEqual(Object.keys(data), ["version", "contact", "subject", "message"]);
+  assert.equal(data.campaign, "senate");
+  assert.deepEqual(Object.keys(data), ["version", "contact", "subject", "message", "campaign"]);
   const dc = sample();
   dc.contact.state = "DC";
   assert.equal(validateExport(dc).contact.state, "DC");
@@ -28,6 +30,21 @@ test("validates and normalizes a contact export", () => {
   const withPrefix = sample();
   withPrefix.contact.prefix = "Mx.";
   assert.equal(validateExport(withPrefix).contact.prefix, "Mx.");
+});
+
+test("validates campaign labels and rejects exports for the other helper", () => {
+  const senate = validateExportForCampaign(sample("senate"), "senate");
+  assert.equal(senate.campaignVerified, true);
+  const house = validateExportForCampaign(sample("house"), "house");
+  assert.equal(house.campaignVerified, true);
+  assert.throws(() => validateExportForCampaign(sample("senate"), "house"), /Senate export/);
+  assert.throws(() => validateExportForCampaign(sample("house"), "senate"), /House export/);
+  assert.throws(() => validateExport({ ...sample(), campaign: "other" }), /campaign/);
+  assert.throws(() => validateExportForCampaign(sample(), "other"), /campaign/);
+
+  const legacy = sample();
+  delete legacy.campaign;
+  assert.equal(validateExportForCampaign(legacy, "house").campaignVerified, false);
 });
 
 test("rejects malformed, incomplete, and oversized exports", () => {
